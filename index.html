@@ -686,7 +686,11 @@
     var undoBtn = document.getElementById('undoBtn');
 
     // ========== 工具 ==========
-    function randInt(max) { return Math.floor(Math.random() * max); }
+    function randInt(max) {
+      var arr = new Uint32Array(1);
+      crypto.getRandomValues(arr);
+      return arr[0] % max;
+    }
     function sleep(ms)    { return new Promise(function(r) { setTimeout(r, ms); }); }
 
     // ========== 粒子爆炸 ==========
@@ -784,17 +788,15 @@
       currentRound++;
       updateProgress(currentRound);
 
-      // 展示结果 2 秒
-      await sleep(2000);
-
-      // 隐藏结果揭示，恢复指南针
+      // 隐藏结果揭示，恢复指南针（短延迟后）
+      await sleep(800);
       resultReveal.classList.remove('show');
 
       if (currentRound >= 4) {
         document.getElementById('playerLabel').textContent = '全部完成！';
         document.getElementById('playerName').textContent = '';
         document.getElementById('rollBtnText').textContent = '';
-        await sleep(600);
+        await sleep(400);
         showResult();
       } else {
         document.getElementById('playerName').textContent = PLAYERS[currentRound];
