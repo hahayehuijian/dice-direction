@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>摇骰子 · 分配方位</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    /* ===== 标题 ===== */
+    .title {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .title h1 {
+      font-size: 2rem;
+      color: #fff;
+      letter-spacing: 4px;
+      text-shadow: 0 0 20px rgba(255,200,50,0.6);
+    }
+    .title p {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.9rem;
+      margin-top: 6px;
+      letter-spacing: 2px;
+    }
+
+    /* ===== 进度条 ===== */
+    .progress-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+    .progress-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.3);
+      background: transparent;
+      transition: all 0.4s ease;
+    }
+    .progress-dot.done {
+      background: #ffd700;
+      border-color: #ffd700;
+      box-shadow: 0 0 10px rgba(255,215,0,0.8);
+    }
+
+    /* ===== 主布局 ===== */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 280px 1fr;
+      grid-template-rows: 1fr 280px 1fr;
+      gap: 10px;
+      width: min(700px, 95vw);
+      height: min(700px, 95vw);
+      position: relative;
+    }
+
+    /* 指南针背景 */
+    .compass-bg {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .compass-ring {
+      width: min(660px, 90vw);
+      height: min(660px, 90vw);
+      border-radius: 50%;
+      border: 1px dashed rgba(255,255,255,0.08);
+    }
+
+    /* ===== 方位格子 ===== */
+    .direction-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .direction-card {
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 2px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.5s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .direction-card.assigned {
+      border-color: var(--color);
+      background: rgba(var(--rgb), 0.15);
+      box-shadow: 0 0 30px rgba(var(--rgb), 0.4), inset 0 0 20px rgba(var(--rgb), 0.1);
+    }
+
+    .direction-card.assigned::before {
+      content: '';
+      position: absolute;
+      inset: -50%;
+      background: radial-gradient(circle, rgba(var(--rgb), 0.15) 0%, transparent 60%);
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+
+    .direction-symbol {
+      font-size: clamp(2rem, 5vw, 3rem);
+      line-height: 1;
+      filter: drop-shadow(0 0 8px currentColor);
+      position: relative;
+      z-index: 1;
+    }
+
+    .direction-name {
+      font-size: clamp(1rem, 2.5vw, 1.4rem);
+      font-weight: 700;
+      letter-spacing: 2px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .assigned-player {
+      font-size: clamp(0.75rem, 1.8vw, 0.95rem);
+      color: rgba(255,255,255,0.85);
+      letter-spacing: 1px;
+      position: relative;
+      z-index: 1;
+      background: rgba(0,0,0,0.3);
+      padding: 3px 10px;
+      border-radius: 20px;
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 北（上） */
+    .cell-north { grid-column: 2; grid-row: 1; }
+    .card-north { --color: #4ecdc4; --rgb: 78,205,196; color: #4ecdc4; }
+
+    /* 南（下） */
+    .cell-south { grid-column: 2; grid-row: 3; }
+    .card-south { --color: #ff6b6b; --rgb: 255,107,107; color: #ff6b6b; }
+
+    /* 西（左） */
+    .cell-west { grid-column: 1; grid-row: 2; }
+    .card-west { --color: #a29bfe; --rgb: 162,155,254; color: #a29bfe; }
+
+    /* 东（右） */
+    .cell-east { grid-column: 3; grid-row: 2; }
+    .card-east { --color: #ffd700; --rgb: 255,215,0; color: #ffd700; }
+
+    /* 中央摇骰子区域 */
+    .cell-center {
+      grid-column: 2;
+      grid-row: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ===== 骰子按钮 ===== */
+    .dice-btn-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .current-player-label {
+      color: rgba(255,255,255,0.7);
+      font-size: 0.9rem;
+      letter-spacing: 1px;
+      text-align: center;
+      min-height: 22px;
+    }
+
+    .current-player-name {
+      color: #ffd700;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    /* ===== 3D 骰子 ===== */
+    .dice-scene {
+      width: min(110px, 26vw);
+      height: min(110px, 26vw);
+      perspective: 600px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      filter: drop-shadow(0 8px 24px rgba(0,0,0,0.6));
+      transition: filter 0.2s;
+    }
+
+    .dice-scene:hover .dice-cube {
+      filter: brightness(1.15);
+    }
+
+    .dice-scene:active .dice-cube {
+      transform: var(--current-transform, rotateX(0deg) rotateY(0deg)) scale(0.93);
+    }
+
+    .dice-scene.disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    .dice-cube {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transform: rotateX(-20deg) rotateY(30deg);
+      transition: transform 0.4s ease;
+      --current-transform: rotateX(-20deg) rotateY(30deg);
+    }
+
+    /* 摇骰旋转动画：随机多圈翻滚 */
+    .dice-cube.rolling {
+      animation: cube-spin var(--spin-duration, 0.7s) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+
+    @keyframes cube-spin {
+      0%   { transform: var(--start-t); }
+      20%  { transform: rotateX(calc(var(--rx) * 0.3 + 180deg)) rotateY(calc(var(--ry) * 0.3 + 90deg)) rotateZ(15deg); }
+      45%  { transform: rotateX(calc(var(--rx) * 0.6 + 360deg)) rotateY(calc(var(--ry) * 0.6 + 270deg)) rotateZ(-20deg); }
+      70%  { transform: rotateX(calc(var(--rx) * 0.85 + 450deg)) rotateY(calc(var(--ry) * 0.85 + 360deg)) rotateZ(10deg); }
+      88%  { transform: rotateX(calc(var(--rx) - 8deg)) rotateY(calc(var(--ry) + 4deg)) rotateZ(-3deg); }
+      100% { transform: rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(0deg); }
+    }
+
+    .dice-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(145deg, #2c2c55, #1a1a38);
+      border: 2px solid rgba(255,215,0,0.35);
+      border-radius: clamp(8px, 2vw, 14px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      backface-visibility: hidden;
+      box-shadow:
+        inset 0 0 12px rgba(255,255,255,0.05),
+        inset 0 2px 4px rgba(255,255,255,0.08);
+    }
+
+    .dice-face .face-icon {
+      font-size: clamp(1.4rem, 4vw, 2.2rem);
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+
+    .dice-face .face-text {
+      font-size: clamp(1.6rem, 5vw, 2.6rem);
+      font-weight: 800;
+      letter-spacing: 4px;
+      line-height: 1;
+    }
+
+    /* 4个方位面 — 每面用自己的颜色 */
+    .face-north {
+      transform: translateZ(calc(min(110px, 26vw) / 2));
+      color: #4ecdc4;
+      border-color: rgba(78,205,196,0.5);
+    }
+    .face-south {
+      transform: rotateY(180deg) translateZ(calc(min(110px, 26vw) / 2));
+      color: #ff6b6b;
+      border-color: rgba(255,107,107,0.5);
+    }
+    .face-west {
+      transform: rotateY(-90deg) translateZ(calc(min(110px, 26vw) / 2));
+      color: #a29bfe;
+      border-color: rgba(162,155,254,0.5);
+    }
+    .face-east {
+      transform: rotateY(90deg) translateZ(calc(min(110px, 26vw) / 2));
+      color: #ffd700;
+      border-color: rgba(255,215,0,0.5);
+    }
+    /* 顶面和底面 — 装饰面 */
+    .face-top {
+      transform: rotateX(90deg) translateZ(calc(min(110px, 26vw) / 2));
+      color: rgba(255,255,255,0.25);
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      border-color: rgba(255,255,255,0.1);
+    }
+    .face-bottom {
+      transform: rotateX(-90deg) translateZ(calc(min(110px, 26vw) / 2));
+      color: rgba(255,255,255,0.25);
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      border-color: rgba(255,255,255,0.1);
+    }
+
+    /* 摇骰时所有面金色发光边框 */
+    .dice-scene.rolling .dice-face {
+      border-color: rgba(255,215,0,0.8) !important;
+      box-shadow:
+        inset 0 0 12px rgba(255,215,0,0.15),
+        0 0 20px rgba(255,215,0,0.3);
+    }
+
+    .shake-hint {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 1px;
+    }
+
+    /* ===== 飞散粒子 ===== */
+    .particle {
+      position: fixed;
+      pointer-events: none;
+      border-radius: 50%;
+      animation: particle-fly 0.8s ease-out forwards;
+      z-index: 999;
+    }
+
+    @keyframes particle-fly {
+      0%   { opacity: 1; transform: translate(0, 0) scale(1); }
+      100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.2); }
+    }
+
+    /* ===== 完成提示 ===== */
+    .complete-banner {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .complete-banner.show {
+      display: flex;
+    }
+
+    .complete-box {
+      background: linear-gradient(145deg, #1e1e40, #12122a);
+      border: 2px solid rgba(255,215,0,0.5);
+      border-radius: 28px;
+      padding: 40px 50px;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(255,215,0,0.2);
+      animation: pop-in 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    @keyframes pop-in {
+      from { transform: scale(0.5); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+
+    .complete-box h2 {
+      font-size: 1.8rem;
+      color: #ffd700;
+      letter-spacing: 4px;
+      margin-bottom: 20px;
+      text-shadow: 0 0 20px rgba(255,215,0,0.6);
+    }
+
+    .result-list {
+      list-style: none;
+      margin-bottom: 30px;
+    }
+
+    .result-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 20px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      background: rgba(255,255,255,0.05);
+      font-size: 1rem;
+      gap: 20px;
+    }
+
+    .result-player { color: rgba(255,255,255,0.8); }
+    .result-arrow  { color: rgba(255,255,255,0.3); }
+    .result-dir    { font-weight: 700; font-size: 1.1rem; }
+
+    .reset-btn {
+      background: linear-gradient(135deg, #ffd700, #ffaa00);
+      color: #1a1a2e;
+      border: none;
+      padding: 14px 40px;
+      border-radius: 50px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 2px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 20px rgba(255,215,0,0.4);
+    }
+
+    .reset-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(255,215,0,0.5);
+    }
+
+    .reset-btn:active {
+      transform: translateY(0);
+    }
+
+    /* ===== 响应式 ===== */
+    @media (max-width: 480px) {
+      .title h1 { font-size: 1.5rem; }
+      .main-layout { gap: 6px; }
+      .direction-card { border-radius: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="title">
+    <h1>🎲 摇骰定方位</h1>
+    <p>4人依次摇骰 · 随机分配东南西北</p>
+  </div>
+
+  <!-- 进度点 -->
+  <div class="progress-bar" id="progressBar">
+    <div class="progress-dot" id="dot0"></div>
+    <div class="progress-dot" id="dot1"></div>
+    <div class="progress-dot" id="dot2"></div>
+    <div class="progress-dot" id="dot3"></div>
+  </div>
+
+  <!-- 主布局 -->
+  <div class="main-layout">
+
+    <!-- 指南针背景 -->
+    <div class="compass-bg"><div class="compass-ring"></div></div>
+
+    <!-- 北 -->
+    <div class="direction-cell cell-north">
+      <div class="direction-card card-north" id="card-north">
+        <div class="direction-symbol">☆</div>
+        <div class="direction-name">北</div>
+      </div>
+    </div>
+
+    <!-- 南 -->
+    <div class="direction-cell cell-south">
+      <div class="direction-card card-south" id="card-south">
+        <div class="direction-symbol">☆</div>
+        <div class="direction-name">南</div>
+      </div>
+    </div>
+
+    <!-- 西 -->
+    <div class="direction-cell cell-west">
+      <div class="direction-card card-west" id="card-west">
+        <div class="direction-symbol">☆</div>
+        <div class="direction-name">西</div>
+      </div>
+    </div>
+
+    <!-- 东 -->
+    <div class="direction-cell cell-east">
+      <div class="direction-card card-east" id="card-east">
+        <div class="direction-symbol">☆</div>
+        <div class="direction-name">东</div>
+      </div>
+    </div>
+
+    <!-- 中央骰子 -->
+    <div class="cell-center">
+      <div class="dice-btn-wrapper">
+        <div class="current-player-label">
+          轮到&nbsp;<span class="current-player-name" id="curPlayerName">玩家1</span>&nbsp;摇骰
+        </div>
+        <!-- 3D骰子容器，点击触发摇骰 -->
+        <div class="dice-scene" id="diceBtn" onclick="rollDice()">
+          <div class="dice-cube" id="diceCube">
+            <div class="dice-face face-north"><span class="face-icon">⬆</span><span class="face-text">北</span></div>
+            <div class="dice-face face-south"><span class="face-icon">⬇</span><span class="face-text">南</span></div>
+            <div class="dice-face face-west"><span class="face-icon">⬅</span><span class="face-text">西</span></div>
+            <div class="dice-face face-east"><span class="face-icon">➡</span><span class="face-text">东</span></div>
+            <div class="dice-face face-top">🎲</div>
+            <div class="dice-face face-bottom">🎲</div>
+          </div>
+        </div>
+        <div class="shake-hint" id="shakeHint">点击摇骰</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 完成弹窗 -->
+  <div class="complete-banner" id="completeBanner">
+    <div class="complete-box">
+      <h2>🎉 方位已定！</h2>
+      <ul class="result-list" id="resultList"></ul>
+      <button class="reset-btn" onclick="resetGame()">🔄 重新摇骰</button>
+    </div>
+  </div>
+
+  <script>
+    // ========== 配置 ==========
+    const PLAYERS = ['玩家1', '玩家2', '玩家3', '玩家4'];
+    const DIRECTIONS = [
+      { id: 'north', name: '北' },
+      { id: 'south', name: '南' },
+      { id: 'west',  name: '西' },
+      { id: 'east',  name: '东' },
+    ];
+
+    // 方位 → 骰子面朝前时的旋转角度
+    // 根据CSS中各面定义：
+    //   face-north: translateZ(+)    → 默认朝前，不需旋转
+    //   face-south: rotateY(180deg)  → 需rotateY(0) 让它朝前，但它是Y180翻转的，所以rotateY(180)让它翻回来朝前
+    //   face-west:  rotateY(-90deg)  → 需rotateY(90)让它回到正前方
+    //   face-east:  rotateY(90deg)   → 需rotateY(-90)让它回到正前方
+    const DIR_ROTATION = {
+      north: { rx: 0,   ry: 0    },
+      south: { rx: 0,   ry: 180  },
+      west:  { rx: 0,   ry: 90   },
+      east:  { rx: 0,   ry: -90  },
+    };
+
+    // ========== 状态 ==========
+    let currentRound = 0;
+    let remaining = [...DIRECTIONS];
+    let results = [];
+    let isRolling = false;
+    // 当前骰子静止的旋转角（累计，避免动画回跳）
+    let curRx = -20, curRy = 30;
+
+    // ========== DOM ==========
+    const diceScene = document.getElementById('diceBtn');
+    const diceCube  = document.getElementById('diceCube');
+    function getPlayerLabel()  { return document.querySelector('.current-player-label'); }
+    function getCurPlayerName(){ return document.getElementById('curPlayerName'); }
+
+    // ========== 工具 ==========
+    function randInt(max) { return Math.floor(Math.random() * max); }
+    function sleep(ms)    { return new Promise(r => setTimeout(r, ms)); }
+
+    // ========== 3D骰子旋转动画 ==========
+    function spinToDirection(dirId) {
+      return new Promise(resolve => {
+        const base = DIR_ROTATION[dirId];
+        // 在当前角度基础上加多圈旋转
+        const extraX = 360 * (2 + randInt(2));
+        const extraY = 360 * (2 + randInt(2));
+        const finalRx = base.rx + extraX;
+        const finalRy = base.ry + extraY;
+
+        const duration = 800 + randInt(200);
+
+        diceCube.style.setProperty('--start-t', `rotateX(${curRx}deg) rotateY(${curRy}deg)`);
+        diceCube.style.setProperty('--rx', `${finalRx}deg`);
+        diceCube.style.setProperty('--ry', `${finalRy}deg`);
+        diceCube.style.setProperty('--spin-duration', `${duration}ms`);
+
+        diceCube.classList.remove('rolling');
+        void diceCube.offsetWidth;
+        diceCube.classList.add('rolling');
+        diceScene.classList.add('rolling');
+
+        setTimeout(() => {
+          diceCube.classList.remove('rolling');
+          diceScene.classList.remove('rolling');
+          diceCube.style.transform = `rotateX(${finalRx}deg) rotateY(${finalRy}deg)`;
+          diceCube.style.setProperty('--current-transform',
+            `rotateX(${finalRx}deg) rotateY(${finalRy}deg)`);
+          curRx = finalRx;
+          curRy = finalRy;
+          resolve();
+        }, duration + 50);
+      });
+    }
+
+    // ========== 粒子爆炸 ==========
+    function spawnParticles(x, y, color) {
+      const colors = [color, '#fff', '#ffd700', '#ff6b6b', '#4ecdc4'];
+      for (let i = 0; i < 18; i++) {
+        const el = document.createElement('div');
+        el.className = 'particle';
+        const size = 4 + randInt(8);
+        const angle = (Math.PI * 2 / 18) * i + (Math.random() - 0.5) * 0.5;
+        const dist = 60 + randInt(100);
+        el.style.cssText = `
+          left: ${x}px; top: ${y}px;
+          width: ${size}px; height: ${size}px;
+          background: ${colors[randInt(colors.length)]};
+          --tx: ${Math.cos(angle) * dist}px;
+          --ty: ${Math.sin(angle) * dist}px;
+        `;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 900);
+      }
+    }
+
+    // ========== 更新方位卡片 ==========
+    function updateCard(dirId, playerName) {
+      const card = document.getElementById('card-' + dirId);
+      card.classList.add('assigned');
+      const existing = card.querySelector('.assigned-player');
+      if (existing) existing.remove();
+      const span = document.createElement('span');
+      span.className = 'assigned-player';
+      span.textContent = playerName;
+      card.appendChild(span);
+      card.querySelector('.direction-symbol').textContent =
+        { north:'🔵', south:'🔴', west:'🟣', east:'🟡' }[dirId];
+    }
+
+    // ========== 更新进度点 ==========
+    function updateProgress(n) {
+      for (let i = 0; i < 4; i++) {
+        document.getElementById('dot' + i).classList.toggle('done', i < n);
+      }
+    }
+
+    // ========== 主逻辑：摇骰 ==========
+    async function rollDice() {
+      if (isRolling || currentRound >= 4) return;
+      isRolling = true;
+      diceScene.classList.add('disabled');
+
+      // 先随机选一个剩余方位
+      const idx = randInt(remaining.length);
+      const dir = remaining.splice(idx, 1)[0];
+      const player = PLAYERS[currentRound];
+
+      // 骰子旋转到该方位面朝前
+      await spinToDirection(dir.id);
+
+      results.push({ player, direction: dir });
+
+      // 更新卡片
+      updateCard(dir.id, player);
+
+      // 粒子爆炸
+      const cardEl = document.getElementById('card-' + dir.id);
+      const rect = cardEl.getBoundingClientRect();
+      spawnParticles(
+        rect.left + rect.width / 2,
+        rect.top  + rect.height / 2,
+        { north:'#4ecdc4', south:'#ff6b6b', west:'#a29bfe', east:'#ffd700' }[dir.id]
+      );
+
+      currentRound++;
+      updateProgress(currentRound);
+
+      await sleep(300);
+      diceScene.classList.remove('disabled');
+
+      if (currentRound >= 4) {
+        getPlayerLabel().innerHTML = '&nbsp;所有方位已分配！&nbsp;';
+        await sleep(700);
+        showResult();
+      } else {
+        getCurPlayerName().textContent = PLAYERS[currentRound];
+      }
+
+      isRolling = false;
+    }
+
+    // ========== 显示结果弹窗 ==========
+    function showResult() {
+      const list = document.getElementById('resultList');
+      list.innerHTML = '';
+      const colorMap = { 北:'#4ecdc4', 南:'#ff6b6b', 西:'#a29bfe', 东:'#ffd700' };
+      results.forEach(r => {
+        const li = document.createElement('li');
+        const c = colorMap[r.direction.name];
+        li.innerHTML = `
+          <span class="result-player">${r.player}</span>
+          <span class="result-arrow">→</span>
+          <span class="result-dir" style="color:${c}">${r.direction.name}</span>
+        `;
+        list.appendChild(li);
+      });
+      document.getElementById('completeBanner').classList.add('show');
+    }
+
+    // ========== 重置 ==========
+    function resetGame() {
+      currentRound = 0;
+      remaining = [...DIRECTIONS];
+      results = [];
+      isRolling = false;
+      curRx = -20; curRy = 30;
+
+      // 重置卡片
+      ['north','south','west','east'].forEach(id => {
+        const card = document.getElementById('card-' + id);
+        card.classList.remove('assigned');
+        const p = card.querySelector('.assigned-player');
+        if (p) p.remove();
+        card.querySelector('.direction-symbol').textContent = '★';
+      });
+
+      updateProgress(0);
+
+      // 骰子归位
+      diceCube.style.transform = `rotateX(${curRx}deg) rotateY(${curRy}deg)`;
+      diceCube.style.setProperty('--current-transform', `rotateX(${curRx}deg) rotateY(${curRy}deg)`);
+
+      // 重建提示文字
+      getPlayerLabel().innerHTML =
+        '轮到&nbsp;<span class="current-player-name" id="curPlayerName">玩家1</span>&nbsp;摇骰';
+
+      diceScene.classList.remove('disabled');
+      document.getElementById('completeBanner').classList.remove('show');
+    }
+
+    // ========== 键盘支持（空格/回车摇骰） ==========
+    document.addEventListener('keydown', e => {
+      if (e.code === 'Space' || e.code === 'Enter') {
+        e.preventDefault();
+        rollDice();
+      }
+    });
+  </script>
+</body>
+</html>
