@@ -634,11 +634,6 @@
           </div>
           <div class="compass-center"></div>
         </div>
-        <!-- 结果揭示 -->
-        <div class="result-reveal" id="resultReveal">
-          <div class="result-reveal-dir" id="revealDir">正北</div>
-          <div class="result-reveal-label">方位</div>
-        </div>
       </div>
     </div>
 
@@ -681,8 +676,6 @@
     // ========== DOM ==========
     var rollBtn = document.getElementById('rollBtn');
     var compassEl = document.getElementById('compassEl');
-    var resultReveal = document.getElementById('resultReveal');
-    var revealDir = document.getElementById('revealDir');
     var undoBtn = document.getElementById('undoBtn');
 
     // ========== 工具 ==========
@@ -755,22 +748,14 @@
       var dir = remaining.splice(idx, 1)[0];
       var player = PLAYERS[currentRound];
 
-      // 隐藏上次结果
-      resultReveal.classList.remove('show');
-
       // 指南针快速旋转
       compassEl.classList.add('spinning');
 
-      // 旋转 1.5 秒
-      await sleep(1500);
+      // 旋转 1 秒
+      await sleep(1000);
 
-      // 停止旋转（带减速感）
+      // 停止旋转
       compassEl.classList.remove('spinning');
-
-      // 揭示结果
-      revealDir.textContent = dir.name;
-      revealDir.style.color = dir.color;
-      resultReveal.classList.add('show');
 
       // 更新卡片
       updateCard(dir, player);
@@ -788,15 +773,11 @@
       currentRound++;
       updateProgress(currentRound);
 
-      // 隐藏结果揭示，恢复指南针（短延迟后）
-      await sleep(800);
-      resultReveal.classList.remove('show');
-
       if (currentRound >= 4) {
         document.getElementById('playerLabel').textContent = '全部完成！';
         document.getElementById('playerName').textContent = '';
         document.getElementById('rollBtnText').textContent = '';
-        await sleep(400);
+        await sleep(600);
         showResult();
       } else {
         document.getElementById('playerName').textContent = PLAYERS[currentRound];
@@ -830,9 +811,6 @@
 
       // 隐藏撤销按钮（如果已撤销到0次）
       updateUndoBtn();
-
-      // 隐藏结果揭示
-      resultReveal.classList.remove('show');
     }
 
     // ========== 显示结果弹窗 ==========
@@ -867,7 +845,6 @@
       updateProgress(0);
       updateUndoBtn();
 
-      resultReveal.classList.remove('show');
       compassEl.classList.remove('spinning');
       rollBtn.classList.remove('disabled');
 
