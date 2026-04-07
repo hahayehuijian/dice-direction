@@ -374,16 +374,17 @@
       transition: color 0.3s ease;
     }
 
-    /* ===== 重新选择按钮 ===== */
-    .undo-btn-wrap {
+    /* ===== 操作按钮 ===== */
+    .action-btns-wrap {
       height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 12px;
       margin-top: 4px;
     }
 
-    .undo-btn {
+    .action-btn {
       display: none;
       align-items: center;
       gap: 6px;
@@ -400,21 +401,31 @@
       font-family: inherit;
     }
 
-    .undo-btn.visible {
+    .action-btn.visible {
       display: inline-flex;
       animation: fadeIn 0.3s ease;
     }
 
-    .undo-btn:hover {
+    .action-btn:hover {
       background: rgba(255,255,255,0.14);
       border-color: rgba(255,255,255,0.35);
       color: #fff;
     }
-    .undo-btn:active {
+    .action-btn:active {
       transform: scale(0.96);
     }
-    .undo-btn .undo-icon {
+    .action-btn .undo-icon,
+    .action-btn .reset-icon {
       font-size: 1rem;
+    }
+
+    .reset-btn-small {
+      border-color: rgba(255,215,0,0.25);
+      color: rgba(255,215,0,0.7);
+    }
+    .reset-btn-small:hover {
+      border-color: rgba(255,215,0,0.5);
+      color: #ffd700;
     }
 
     /* ===== 飞散粒子 ===== */
@@ -601,11 +612,15 @@
 
     <div class="roll-btn-text" id="rollBtnText">点击定方位</div>
 
-    <!-- 重新选择按钮 -->
-    <div class="undo-btn-wrap">
-      <button class="undo-btn" id="undoBtn" onclick="undoLast()">
+    <!-- 操作按钮 -->
+    <div class="action-btns-wrap">
+      <button class="action-btn undo-btn" id="undoBtn" onclick="undoLast()">
         <span class="undo-icon">↩</span>
         重新选择
+      </button>
+      <button class="action-btn reset-btn-small" id="resetBtn" onclick="resetGame()">
+        <span class="reset-icon">🔄</span>
+        重置
       </button>
     </div>
   </div>
@@ -639,6 +654,7 @@
     var rollBtn = document.getElementById('rollBtn');
     var compassEl = document.getElementById('compassEl');
     var undoBtn = document.getElementById('undoBtn');
+    var resetBtn = document.getElementById('resetBtn');
 
     // ========== 工具 ==========
     function randInt(max) {
@@ -689,12 +705,18 @@
       }
     }
 
-    // ========== 更新撤销按钮状态 ==========
+    // ========== 更新按钮状态 ==========
     function updateUndoBtn() {
-      if (results.length > 0 && !isRolling && currentRound < 4) {
+      var hasResults = results.length > 0;
+      if (hasResults && !isRolling && currentRound < 4) {
         undoBtn.classList.add('visible');
       } else {
         undoBtn.classList.remove('visible');
+      }
+      if (hasResults && !isRolling) {
+        resetBtn.classList.add('visible');
+      } else {
+        resetBtn.classList.remove('visible');
       }
     }
 
