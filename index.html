@@ -567,14 +567,46 @@
       margin-bottom: 8px;
       background: rgba(255,255,255,0.05);
       font-size: 1rem;
-      gap: 20px;
+      gap: 12px;
     }
 
-    .result-player { color: rgba(255,255,255,0.8); }
-    .result-arrow  { color: rgba(255,255,255,0.3); }
+    .result-player { color: rgba(255,255,255,0.8); flex-shrink: 0; }
+    .result-arrow  { color: rgba(255,255,255,0.3); flex-shrink: 0; }
+    .result-info { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
     .result-dir    { font-weight: 700; font-size: 1.1rem; }
+    .result-degree { font-size: 0.75rem; color: rgba(255,255,255,0.4); letter-spacing: 1px; }
 
-    .reset-btn {
+    .result-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .compass-app-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.08);
+      border: 1.5px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.8);
+      padding: 12px 32px;
+      border-radius: 50px;
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      font-family: inherit;
+    }
+
+    .compass-app-btn:hover {
+      background: rgba(255,255,255,0.14);
+      border-color: rgba(255,255,255,0.35);
+      color: #fff;
+    }
+
+    .close-result-btn {
       background: linear-gradient(135deg, #ffd700, #ffaa00);
       color: #1a1a2e;
       border: none;
@@ -589,7 +621,7 @@
       font-family: inherit;
     }
 
-    .reset-btn:hover {
+    .close-result-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 30px rgba(255,215,0,0.5);
     }
@@ -707,7 +739,10 @@
     <div class="complete-box">
       <h2>🎉 方位已定！</h2>
       <ul class="result-list" id="resultList"></ul>
-      <button class="reset-btn" onclick="resetGame()">🔄 重新开始</button>
+      <div class="result-actions">
+        <button class="compass-app-btn" onclick="openCompass()">🧭 打开指南针</button>
+        <button class="close-result-btn" onclick="closeResult()">知道了</button>
+      </div>
     </div>
   </div>
 
@@ -715,10 +750,10 @@
     // ========== 配置 ==========
     var PLAYERS = ['玩家1', '玩家2', '玩家3', '玩家4'];
     var DIRECTIONS = [
-      { id: 'north', name: '正北', color: '#4ecdc4' },
-      { id: 'east',  name: '正东', color: '#ffd700' },
-      { id: 'west',  name: '正西', color: '#a29bfe' },
-      { id: 'south', name: '正南', color: '#ff6b6b' },
+      { id: 'north', name: '正北', color: '#4ecdc4', degree: 0,   desc: '0° · 北方' },
+      { id: 'east',  name: '正东', color: '#ffd700', degree: 90,  desc: '90° · 东方' },
+      { id: 'west',  name: '正西', color: '#a29bfe', degree: 270, desc: '270° · 西方' },
+      { id: 'south', name: '正南', color: '#ff6b6b', degree: 180, desc: '180° · 南方' },
     ];
 
     // ========== 状态 ==========
@@ -892,10 +927,47 @@
         li.innerHTML =
           '<span class="result-player">' + r.player + '</span>' +
           '<span class="result-arrow">→</span>' +
-          '<span class="result-dir" style="color:' + r.direction.color + '">' + r.direction.name + '</span>';
+          '<span class="result-info">' +
+            '<span class="result-dir" style="color:' + r.direction.color + '">' + r.direction.name + '</span>' +
+            '<span class="result-degree">' + r.direction.desc + '</span>' +
+          '</span>';
         list.appendChild(li);
       });
       document.getElementById('completeBanner').classList.add('show');
+    }
+
+    // ========== 打开手机指南针 ==========
+    function openCompass() {
+      // 尝试多种方式调起手机指南针
+      // 1. iOS Compass App URL Scheme
+      // 2. 通用 geo: 协议（会调起地图+定位）
+      // 3. 回退提示用户手动打开
+      var compassUrl = 'compass://';
+      var geoUrl = 'geo:0,0';
+
+      // 尝试调起系统指南针
+      var start = Date.now();
+      var opened = false;
+
+      // 创建隐藏 iframe 尝试调起
+      var iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = compassUrl;
+      document.body.appendChild(iframe);
+
+      setTimeout(function() {
+        document.body.removeChild(iframe);
+        // 如果 1.5 秒内页面没有隐藏，说明 scheme 无效，尝试 geo
+        if (!document.hidden) {
+          window.open(geoUrl, '_blank');
+        }
+      }, 1500);
+    }
+
+    // ========== 关闭结果弹窗并重置 ==========
+    function closeResult() {
+      document.getElementById('completeBanner').classList.remove('show');
+      setTimeout(function() { resetGame(); }, 300);
     }
 
     // ========== 重置 ==========
