@@ -418,24 +418,23 @@
       font-size: 1rem;
     }
 
-    /* ===== 底部重置按钮（始终可见） ===== */
+    /* ===== 右下角重置按钮（始终可见） ===== */
     .bottom-reset-wrap {
       position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
+      bottom: 16px;
+      right: 16px;
       z-index: 50;
-      text-align: center;
+      text-align: right;
     }
 
     .bottom-reset-btn {
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.12);
       color: rgba(255,255,255,0.3);
-      padding: 6px 24px;
+      padding: 5px 14px;
       border-radius: 50px;
-      font-size: 0.75rem;
-      letter-spacing: 2px;
+      font-size: 0.7rem;
+      letter-spacing: 1px;
       cursor: pointer;
       transition: all 0.25s ease;
       -webkit-tap-highlight-color: transparent;
@@ -448,11 +447,21 @@
     }
 
     .reset-confirm {
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-top: 8px;
+      background: rgba(20,20,40,0.9);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 50px;
+      padding: 6px 12px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       animation: fadeIn 0.2s ease;
+      white-space: nowrap;
     }
 
     .reset-confirm.hidden {
@@ -461,14 +470,14 @@
 
     .reset-confirm-text {
       color: rgba(255,255,255,0.6);
-      font-size: 0.8rem;
+      font-size: 0.75rem;
     }
 
     .reset-confirm-yes,
     .reset-confirm-no {
-      padding: 5px 16px;
+      padding: 4px 12px;
       border-radius: 50px;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       cursor: pointer;
       border: 1px solid rgba(255,255,255,0.2);
       background: rgba(255,255,255,0.08);
