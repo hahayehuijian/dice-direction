@@ -414,18 +414,78 @@
     .action-btn:active {
       transform: scale(0.96);
     }
-    .action-btn .undo-icon,
-    .action-btn .reset-icon {
+    .action-btn .undo-icon {
       font-size: 1rem;
     }
 
-    .reset-btn-small {
-      border-color: rgba(255,215,0,0.25);
-      color: rgba(255,215,0,0.7);
+    /* ===== 底部重置按钮（始终可见） ===== */
+    .bottom-reset-wrap {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      text-align: center;
     }
-    .reset-btn-small:hover {
-      border-color: rgba(255,215,0,0.5);
-      color: #ffd700;
+
+    .bottom-reset-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.3);
+      padding: 6px 24px;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      -webkit-tap-highlight-color: transparent;
+      font-family: inherit;
+    }
+
+    .bottom-reset-btn:hover {
+      color: rgba(255,255,255,0.6);
+      border-color: rgba(255,255,255,0.25);
+    }
+
+    .reset-confirm {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .reset-confirm.hidden {
+      display: none;
+    }
+
+    .reset-confirm-text {
+      color: rgba(255,255,255,0.6);
+      font-size: 0.8rem;
+    }
+
+    .reset-confirm-yes,
+    .reset-confirm-no {
+      padding: 5px 16px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.7);
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .reset-confirm-yes:hover {
+      background: rgba(255,107,107,0.2);
+      border-color: rgba(255,107,107,0.5);
+      color: #ff6b6b;
+    }
+
+    .reset-confirm-no:hover {
+      background: rgba(255,255,255,0.14);
+      color: #fff;
     }
 
     /* ===== 飞散粒子 ===== */
@@ -612,16 +672,24 @@
 
     <div class="roll-btn-text" id="rollBtnText">点击定方位</div>
 
-    <!-- 操作按钮 -->
+    <!-- 重新选择按钮 -->
     <div class="action-btns-wrap">
       <button class="action-btn undo-btn" id="undoBtn" onclick="undoLast()">
         <span class="undo-icon">↩</span>
         重新选择
       </button>
-      <button class="action-btn reset-btn-small" id="resetBtn" onclick="resetGame()">
-        <span class="reset-icon">🔄</span>
-        重置
-      </button>
+    </div>
+  </div>
+
+  <!-- 底部重置按钮（始终可见） -->
+  <div class="bottom-reset-wrap">
+    <button class="bottom-reset-btn" id="bottomResetBtn" onclick="confirmReset()">
+      重置
+    </button>
+    <div class="reset-confirm hidden" id="resetConfirm">
+      <span class="reset-confirm-text">确定重置？</span>
+      <button class="reset-confirm-yes" onclick="doReset()">确定</button>
+      <button class="reset-confirm-no" onclick="cancelReset()">取消</button>
     </div>
   </div>
 
@@ -654,7 +722,7 @@
     var rollBtn = document.getElementById('rollBtn');
     var compassEl = document.getElementById('compassEl');
     var undoBtn = document.getElementById('undoBtn');
-    var resetBtn = document.getElementById('resetBtn');
+    var resetConfirm = document.getElementById('resetConfirm');
 
     // ========== 工具 ==========
     function randInt(max) {
@@ -707,17 +775,26 @@
 
     // ========== 更新按钮状态 ==========
     function updateUndoBtn() {
-      var hasResults = results.length > 0;
-      if (hasResults && !isRolling && currentRound < 4) {
+      if (results.length > 0 && !isRolling && currentRound < 4) {
         undoBtn.classList.add('visible');
       } else {
         undoBtn.classList.remove('visible');
       }
-      if (hasResults && !isRolling) {
-        resetBtn.classList.add('visible');
-      } else {
-        resetBtn.classList.remove('visible');
-      }
+    }
+
+    // ========== 二次确认重置 ==========
+    function confirmReset() {
+      if (results.length === 0 && currentRound === 0) return;
+      resetConfirm.classList.remove('hidden');
+    }
+
+    function cancelReset() {
+      resetConfirm.classList.add('hidden');
+    }
+
+    function doReset() {
+      resetConfirm.classList.add('hidden');
+      resetGame();
     }
 
     // ========== 主逻辑：摇骰 ==========
