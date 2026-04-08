@@ -901,11 +901,16 @@
 
     function onOrientation(e) {
       var h = null;
-      if (e.absolute && e.alpha !== null) {
-        h = 360 - e.alpha;
-      } else if (e.webkitCompassHeading !== undefined) {
+      // iOS Safari: webkitCompassHeading 最可靠
+      if (e.webkitCompassHeading !== undefined && e.webkitCompassHeading !== null) {
         h = e.webkitCompassHeading;
-      } else if (e.alpha !== null) {
+      }
+      // Android Chrome: 优先使用 absolute 模式
+      else if (e.absolute && e.alpha !== null) {
+        h = 360 - e.alpha;
+      }
+      // 某些安卓设备的 fallback
+      else if (e.alpha !== null && e.alpha !== undefined) {
         h = 360 - e.alpha;
       }
       if (h === null) return;
