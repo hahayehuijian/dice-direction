@@ -385,31 +385,49 @@
     }
     .manual-rotate-slider {
       width: 100%;
-      height: 6px;
+      height: 8px;
       -webkit-appearance: none;
       appearance: none;
       background: rgba(255,255,255,0.15);
-      border-radius: 3px;
+      border-radius: 4px;
       outline: none;
+      touch-action: pan-y;
+      -webkit-tap-highlight-color: transparent;
     }
     .manual-rotate-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
       background: linear-gradient(145deg, #ffd700, #ffaa00);
       border-radius: 50%;
-      cursor: pointer;
-      box-shadow: 0 0 10px rgba(255,215,0,0.5);
+      cursor: grab;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 12px rgba(255,215,0,0.6);
+      border: 2px solid #fff;
+      margin-top: -8px;
+      transition: transform 0.1s ease;
+    }
+    .manual-rotate-slider::-webkit-slider-thumb:active {
+      cursor: grabbing;
+      transform: scale(1.1);
     }
     .manual-rotate-slider::-moz-range-thumb {
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
       background: linear-gradient(145deg, #ffd700, #ffaa00);
       border-radius: 50%;
-      cursor: pointer;
-      border: none;
-      box-shadow: 0 0 10px rgba(255,215,0,0.5);
+      cursor: grab;
+      border: 2px solid #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 12px rgba(255,215,0,0.6);
+    }
+    .manual-rotate-slider::-moz-range-thumb:active {
+      cursor: grabbing;
+      transform: scale(1.1);
+    }
+    .manual-rotate-slider::-webkit-slider-runnable-track {
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, rgba(255,215,0,0.3) 0%, rgba(255,215,0,0.3) var(--progress, 0%), rgba(255,255,255,0.15) var(--progress, 0%));
     }
     .manual-rotate-value {
       font-size: 0.85rem;
@@ -984,27 +1002,56 @@
     }
 
     // 显示手动旋转滑块（传感器不可用时）
+    var manualRotateInitialized = false;
     function showManualRotate() {
+      // 如果传感器已经激活，不显示手动旋转
+      if (sensorActive) return;
+      
       var wrap = document.getElementById('manualRotateWrap');
       var slider = document.getElementById('manualRotateSlider');
       var value = document.getElementById('manualRotateValue');
+      
+      // 如果已经初始化过，只显示即可
+      if (manualRotateInitialized) {
+        wrap.classList.add('show');
+        return;
+      }
       
       wrap.classList.add('show');
       headingText.textContent = '0°';
       headingSub.textContent = '手动调整方向';
       
-      // 监听滑块变化
-      slider.oninput = function() {
-        var deg = parseInt(this.value);
-        deviceHeading = deg;
-        updateCompassUI(deg);
-        
-        var sector = Math.round(deg / 22.5) % 16;
-        value.textContent = DIR_NAMES_16[sector] + ' ' + deg + '°';
-      };
+      // 更新进度条背景
+      function updateProgress(deg) {
+        var percent = (deg / 360) * 100;
+        slider.style.setProperty('--progress', percent + '%');
+      }
       
-      // 初始化一次
-      slider.oninput();
+      // 使用 requestAnimationFrame 节流更新
+      var pendingUpdate = false;
+      var lastDeg = 0;
+      
+      function doUpdate() {
+        pendingUpdate = false;
+        deviceHeading = lastDeg;
+        updateCompassUI(lastDeg);
+        var sector = Math.round(lastDeg / 22.5) % 16;
+        value.textContent = DIR_NAMES_16[sector] + ' ' + lastDeg + '°';
+        updateProgress(lastDeg);
+      }
+      
+      // 监听滑块变化（使用 input 事件但节流）
+      slider.addEventListener('input', function() {
+        lastDeg = parseInt(this.value);
+        if (!pendingUpdate) {
+          pendingUpdate = true;
+          requestAnimationFrame(doUpdate);
+        }
+      });
+      
+      // 初始化
+      updateProgress(0);
+      manualRotateInitialized = true;
     }
 
     function tryReqPerm() {
@@ -1148,12 +1195,12 @@
         panelCurPlayer.innerHTML = '<strong>' + latest.player + '</strong> 的方位：<strong style="color:' + latest.direction.color + '">' + latest.direction.name + '</strong>';
 
         // 立即渲染指南针
-        if (deviceHeading !== null) {
-          // 有传感器数据，正常更新
+        if (sensorActive && deviceHeading !== null) {
+          // 传感器正常工作，正常更新
           updateCompassUI(deviceHeading);
           updateTargetNeedle(deviceHeading);
-        } else {
-          // 无传感器数据，显示手动旋转滑块
+        } else if (!sensorActive) {
+          // 传感器未激活，显示手动旋转滑块
           showManualRotate();
           // 箭头静止指向对应方位（从正北顺时针）
           needleTarget.style.transform = 'translateX(-50%) rotate(' + latest.direction.degree + 'deg)';
