@@ -330,6 +330,57 @@
     }
     .sensor-tip .link { color: #ffd700; cursor: pointer; text-decoration: underline; }
 
+    /* 手动旋转滑块（传感器不可用时使用） */
+    .manual-rotate-wrap {
+      display: none;
+      margin: 10px 0;
+      padding: 12px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .manual-rotate-wrap.show { display: block; }
+    .manual-rotate-label {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+    .manual-rotate-slider {
+      width: 100%;
+      height: 6px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255,255,255,0.15);
+      border-radius: 3px;
+      outline: none;
+    }
+    .manual-rotate-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(145deg, #ffd700, #ffaa00);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(255,215,0,0.5);
+    }
+    .manual-rotate-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(145deg, #ffd700, #ffaa00);
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 0 10px rgba(255,215,0,0.5);
+    }
+    .manual-rotate-value {
+      font-size: 0.85rem;
+      color: #ffd700;
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
     /* 已分配列表 */
     .assigned-list {
       display: flex; flex-direction: column; gap: 6px; margin-top: 4px;
@@ -593,6 +644,13 @@
         iOS 需在 <strong style="color:#ffd700">设置 → Safari → 运动与方向访问</strong> 开启<br>
         或点击 <span class="link" onclick="requestPerm()">请求权限</span>
       </span>
+    </div>
+
+    <!-- 手动旋转滑块（传感器不可用时使用） -->
+    <div class="manual-rotate-wrap" id="manualRotateWrap">
+      <div class="manual-rotate-label">👇 手动调整方向</div>
+      <input type="range" class="manual-rotate-slider" id="manualRotateSlider" min="0" max="360" value="0">
+      <div class="manual-rotate-value" id="manualRotateValue">正北 0°</div>
     </div>
 
     <!-- 已分配列表 -->
@@ -865,11 +923,10 @@
       // 2秒后检查传感器是否正常工作
       sensorCheckTimer = setTimeout(function() {
         if (!sensorActive && deviceHeading === null) {
-          console.log('传感器未激活，可能是权限问题或浏览器不支持');
-          // 如果面板已显示，更新为无传感器状态
+          console.log('传感器未激活，显示手动旋转');
+          // 如果面板已显示，显示手动旋转滑块
           if (livePanel.classList.contains('show')) {
-            headingText.textContent = '无传感器';
-            headingSub.textContent = '请检查浏览器权限设置';
+            showManualRotate();
           }
         }
       }, 2000);
@@ -878,7 +935,7 @@
     function initSensor() {
       if (typeof DeviceOrientationEvent === 'undefined') { 
         console.log('DeviceOrientationEvent 不支持');
-        showSensorTip(); 
+        showManualRotate(); 
         return; 
       }
       // 非 iOS 13+（没有 requestPermission）→ 直接注册
@@ -889,6 +946,30 @@
         console.log('iOS 13+ 设备，等待用户手势请求权限');
       }
       // iOS 13+ 需要在用户手势中调用 requestPermission，延迟到 rollDice 中处理
+    }
+
+    // 显示手动旋转滑块（传感器不可用时）
+    function showManualRotate() {
+      var wrap = document.getElementById('manualRotateWrap');
+      var slider = document.getElementById('manualRotateSlider');
+      var value = document.getElementById('manualRotateValue');
+      
+      wrap.classList.add('show');
+      headingText.textContent = '0°';
+      headingSub.textContent = '手动调整方向';
+      
+      // 监听滑块变化
+      slider.oninput = function() {
+        var deg = parseInt(this.value);
+        deviceHeading = deg;
+        updateCompassUI(deg);
+        
+        var sector = Math.round(deg / 22.5) % 16;
+        value.textContent = DIR_NAMES_16[sector] + ' ' + deg + '°';
+      };
+      
+      // 初始化一次
+      slider.oninput();
     }
 
     function tryReqPerm() {
@@ -1037,10 +1118,8 @@
           updateCompassUI(deviceHeading);
           updateTargetNeedle(deviceHeading);
         } else {
-          // 无传感器数据，显示静态指向
-          compassDial.style.transform = 'rotate(0deg)';
-          headingText.textContent = '-- °';
-          headingSub.textContent = '请转动手机查看方向';
+          // 无传感器数据，显示手动旋转滑块
+          showManualRotate();
           // 箭头静止指向对应方位（从正北顺时针）
           needleTarget.style.transform = 'translateX(-50%) rotate(' + latest.direction.degree + 'deg)';
         }
