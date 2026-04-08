@@ -853,7 +853,13 @@
     function registerSensorListeners() {
       if (sensorListenersRegistered) return;
       sensorListenersRegistered = true;
-      window.addEventListener('deviceorientationabsolute', onOrientation, true);
+      
+      // 优先使用 deviceorientationabsolute（更精确），fallback 到 deviceorientation
+      if ('ondeviceorientationabsolute' in window) {
+        console.log('使用 deviceorientationabsolute 事件');
+        window.addEventListener('deviceorientationabsolute', onOrientation, true);
+      }
+      // 同时监听 deviceorientation 作为 fallback
       window.addEventListener('deviceorientation', onOrientation, true);
       
       // 2秒后检查传感器是否正常工作
@@ -930,20 +936,28 @@
       // iOS Safari: webkitCompassHeading 最可靠
       if (e.webkitCompassHeading !== undefined && e.webkitCompassHeading !== null) {
         h = e.webkitCompassHeading;
+        console.log('使用 webkitCompassHeading:', h);
       }
-      // Android Chrome: 优先使用 absolute 模式
-      else if (e.absolute && e.alpha !== null && e.alpha !== undefined) {
-        h = 360 - e.alpha;
+      // Android Chrome: 使用 alpha（来自 deviceorientationabsolute 或 deviceorientation）
+      else if (e.alpha !== null && e.alpha !== undefined && !isNaN(e.alpha)) {
+        // deviceorientationabsolute 提供的是相对于地理北极的角度
+        // deviceorientation 提供的 alpha 是相对于初始位置的，需要处理
+        if (e.absolute) {
+          h = 360 - e.alpha;
+        } else {
+          // 非 absolute 模式，alpha 可能不准确，尝试使用
+          h = 360 - e.alpha;
+        }
+        console.log('使用 alpha:', e.alpha, 'absolute:', e.absolute, '计算结果:', h);
       }
-      // 某些安卓设备的 fallback（alpha 可能为 0 也是有效值）
-      else if (e.alpha !== null && e.alpha !== undefined) {
-        h = 360 - e.alpha;
+      
+      // 记录调试信息（默认开启以便排查问题）
+      console.log('orientation event:', { type: e.type, absolute: e.absolute, alpha: e.alpha, beta: e.beta, gamma: e.gamma, webkitCompassHeading: e.webkitCompassHeading, computed: h });
+      
+      if (h === null || isNaN(h)) {
+        console.log('无法计算方向，h 为 null 或 NaN');
+        return;
       }
-      // 记录调试信息
-      if (window.DEBUG_SENSOR) {
-        console.log('orientation event:', { absolute: e.absolute, alpha: e.alpha, beta: e.beta, gamma: e.gamma, webkitCompassHeading: e.webkitCompassHeading, computed: h });
-      }
-      if (h === null) return;
       h = (h + 360) % 360;
       deviceHeading = h;
       sensorActive = true;
@@ -1157,6 +1171,7 @@
       } else {
         livePanel.classList.remove('show');
         currentTargetDeg = null;
+        needleTargetName.textContent = '';
       }
     }
 
