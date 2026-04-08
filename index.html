@@ -651,21 +651,19 @@
         </svg>
       </div>
 
-      <!-- 固定层：方位文字 + 红色北方针 + 彩色目标针 -->
+      <!-- 固定层：方位文字 + 动态目标指针 + 中心点 -->
       <div class="compass-fixed">
         <!-- 中文方位（固定不旋转） -->
         <div class="compass-label label-north">北</div>
         <div class="compass-label label-south">南</div>
         <div class="compass-label label-east">东</div>
         <div class="compass-label label-west">西</div>
-        <!-- 目标方位箭头（彩色） -->
+        <!-- 目标方位箭头（彩色，根据摇中的方位显示） -->
         <div class="needle-target" id="needleTarget">
           <div class="needle-target-arrow" id="needleTargetArrow"></div>
           <div class="needle-target-name" id="needleTargetName"></div>
         </div>
-        <!-- 红色北方箭头 -->
-        <div class="needle-north"></div>
-        <div class="needle-south"></div>
+        <!-- 中心圆点 -->
         <div class="needle-center"></div>
       </div>
     </div>
