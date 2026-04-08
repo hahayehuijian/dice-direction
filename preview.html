@@ -847,12 +847,22 @@
     })();
 
     // ========== 传感器 ==========
+    var sensorListenersRegistered = false;
+
+    function registerSensorListeners() {
+      if (sensorListenersRegistered) return;
+      sensorListenersRegistered = true;
+      window.addEventListener('deviceorientationabsolute', onOrientation, true);
+      window.addEventListener('deviceorientation', onOrientation, true);
+    }
+
     function initSensor() {
       if (typeof DeviceOrientationEvent === 'undefined') { showSensorTip(); return; }
+      // 非 iOS 13+（没有 requestPermission）→ 直接注册
       if (typeof DeviceOrientationEvent.requestPermission !== 'function') {
-        window.addEventListener('deviceorientationabsolute', onOrientation, true);
-        window.addEventListener('deviceorientation', onOrientation, true);
+        registerSensorListeners();
       }
+      // iOS 13+ 需要在用户手势中调用 requestPermission，延迟到 rollDice 中处理
     }
 
     function tryReqPerm() {
@@ -863,8 +873,7 @@
           if (s === 'granted') {
             permissionGranted = true;
             sensorTip.style.display = 'none';
-            window.addEventListener('deviceorientationabsolute', onOrientation, true);
-            window.addEventListener('deviceorientation', onOrientation, true);
+            registerSensorListeners();
           }
         }).catch(function(){});
       }
@@ -876,8 +885,7 @@
           if (s === 'granted') {
             permissionGranted = true;
             sensorTip.style.display = 'none';
-            window.addEventListener('deviceorientationabsolute', onOrientation, true);
-            window.addEventListener('deviceorientation', onOrientation, true);
+            registerSensorListeners();
           }
         }).catch(function(){ showSensorTip(); });
       }
@@ -1157,8 +1165,10 @@
         resultHeadingSub.textContent  = '当前朝向：' + DIR_NAMES_16[sector];
         resultCompassDial.style.transform = 'rotate(' + (-deviceHeading) + 'deg)';
       } else {
-        resultHeadingText.textContent = '-- °';
-        resultHeadingSub.textContent  = '转动手机查看方向';
+        // 检测是否为桌面端（无传感器）
+        var isDesktop = !('ontouchstart' in window) || window.matchMedia('(pointer: fine)').matches;
+        resultHeadingText.textContent = isDesktop ? '桌面端' : '-- °';
+        resultHeadingSub.textContent  = isDesktop ? '请在手机上使用以查看实时方位' : '转动手机查看方向';
       }
 
       resultBannerActive = true;
