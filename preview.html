@@ -258,6 +258,43 @@
       position: absolute; inset: 0; z-index: 3;
     }
 
+    /* 中文方位标签（固定不旋转） */
+    .compass-label {
+      position: absolute;
+      font-weight: bold;
+      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      pointer-events: none;
+    }
+    .compass-label.label-north {
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #ff3b3b;
+      font-size: 16px;
+      text-shadow: 0 0 8px rgba(255,59,59,0.6);
+    }
+    .compass-label.label-south {
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.5);
+      font-size: 14px;
+    }
+    .compass-label.label-east {
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,215,0,0.7);
+      font-size: 14px;
+    }
+    .compass-label.label-west {
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255,215,0,0.7);
+      font-size: 14px;
+    }
+
     /* 固定红色北方箭头（始终朝上） */
     .needle-north {
       position: absolute;
@@ -611,16 +648,16 @@
           <circle cx="100" cy="100" r="72" fill="none" stroke="rgba(255,215,0,0.08)" stroke-width="1"/>
           <!-- 刻度 -->
           <g id="tickGroup"></g>
-          <!-- 中文方位 -->
-          <text x="100" y="16" text-anchor="middle" fill="#ff3b3b" font-size="16" font-weight="bold" font-family="PingFang SC,Microsoft YaHei,sans-serif">北</text>
-          <text x="100" y="192" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14" font-weight="bold" font-family="PingFang SC,Microsoft YaHei,sans-serif">南</text>
-          <text x="186" y="104" text-anchor="middle" fill="rgba(255,215,0,0.7)" font-size="14" font-weight="bold" font-family="PingFang SC,Microsoft YaHei,sans-serif">东</text>
-          <text x="14" y="104" text-anchor="middle" fill="rgba(255,215,0,0.7)" font-size="14" font-weight="bold" font-family="PingFang SC,Microsoft YaHei,sans-serif">西</text>
         </svg>
       </div>
 
-      <!-- 固定层：红色北方针 + 彩色目标针 -->
+      <!-- 固定层：方位文字 + 红色北方针 + 彩色目标针 -->
       <div class="compass-fixed">
+        <!-- 中文方位（固定不旋转） -->
+        <div class="compass-label label-north">北</div>
+        <div class="compass-label label-south">南</div>
+        <div class="compass-label label-east">东</div>
+        <div class="compass-label label-west">西</div>
         <!-- 目标方位箭头（彩色） -->
         <div class="needle-target" id="needleTarget">
           <div class="needle-target-arrow" id="needleTargetArrow"></div>
