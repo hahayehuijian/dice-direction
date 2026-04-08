@@ -848,27 +848,48 @@
 
     // ========== 传感器 ==========
     var sensorListenersRegistered = false;
+    var sensorCheckTimer = null;
 
     function registerSensorListeners() {
       if (sensorListenersRegistered) return;
       sensorListenersRegistered = true;
       window.addEventListener('deviceorientationabsolute', onOrientation, true);
       window.addEventListener('deviceorientation', onOrientation, true);
+      
+      // 2秒后检查传感器是否正常工作
+      sensorCheckTimer = setTimeout(function() {
+        if (!sensorActive && deviceHeading === null) {
+          console.log('传感器未激活，可能是权限问题或浏览器不支持');
+          // 如果面板已显示，更新为无传感器状态
+          if (livePanel.classList.contains('show')) {
+            headingText.textContent = '无传感器';
+            headingSub.textContent = '请检查浏览器权限设置';
+          }
+        }
+      }, 2000);
     }
 
     function initSensor() {
-      if (typeof DeviceOrientationEvent === 'undefined') { showSensorTip(); return; }
+      if (typeof DeviceOrientationEvent === 'undefined') { 
+        console.log('DeviceOrientationEvent 不支持');
+        showSensorTip(); 
+        return; 
+      }
       // 非 iOS 13+（没有 requestPermission）→ 直接注册
       if (typeof DeviceOrientationEvent.requestPermission !== 'function') {
+        console.log('非 iOS 13+ 设备，直接注册传感器');
         registerSensorListeners();
+      } else {
+        console.log('iOS 13+ 设备，等待用户手势请求权限');
       }
       // iOS 13+ 需要在用户手势中调用 requestPermission，延迟到 rollDice 中处理
     }
 
     function tryReqPerm() {
-      if (permissionGranted) return;
+      // iOS 13+ 需要显式请求权限
       if (typeof DeviceOrientationEvent !== 'undefined' &&
           typeof DeviceOrientationEvent.requestPermission === 'function') {
+        if (permissionGranted) return;
         DeviceOrientationEvent.requestPermission().then(function(s) {
           if (s === 'granted') {
             permissionGranted = true;
@@ -876,6 +897,11 @@
             registerSensorListeners();
           }
         }).catch(function(){});
+      } else {
+        // 安卓设备：确保传感器已注册（可能在 initSensor 中已经注册过了）
+        if (!sensorListenersRegistered) {
+          registerSensorListeners();
+        }
       }
     }
 
@@ -906,12 +932,16 @@
         h = e.webkitCompassHeading;
       }
       // Android Chrome: 优先使用 absolute 模式
-      else if (e.absolute && e.alpha !== null) {
+      else if (e.absolute && e.alpha !== null && e.alpha !== undefined) {
         h = 360 - e.alpha;
       }
-      // 某些安卓设备的 fallback
+      // 某些安卓设备的 fallback（alpha 可能为 0 也是有效值）
       else if (e.alpha !== null && e.alpha !== undefined) {
         h = 360 - e.alpha;
+      }
+      // 记录调试信息
+      if (window.DEBUG_SENSOR) {
+        console.log('orientation event:', { absolute: e.absolute, alpha: e.alpha, beta: e.beta, gamma: e.gamma, webkitCompassHeading: e.webkitCompassHeading, computed: h });
       }
       if (h === null) return;
       h = (h + 360) % 360;
@@ -987,11 +1017,17 @@
         // 更新面板标题
         panelCurPlayer.innerHTML = '<strong>' + latest.player + '</strong> 的方位：<strong style="color:' + latest.direction.color + '">' + latest.direction.name + '</strong>';
 
-        // 立即渲染
+        // 立即渲染指南针
         if (deviceHeading !== null) {
+          // 有传感器数据，正常更新
+          updateCompassUI(deviceHeading);
           updateTargetNeedle(deviceHeading);
         } else {
-          // 无传感器时，箭头静止指向对应方位
+          // 无传感器数据，显示静态指向
+          compassDial.style.transform = 'rotate(0deg)';
+          headingText.textContent = '-- °';
+          headingSub.textContent = '请转动手机查看方向';
+          // 箭头静止指向对应方位（从正北顺时针）
           needleTarget.style.transform = 'translateX(-50%) rotate(' + latest.direction.degree + 'deg)';
         }
       }
