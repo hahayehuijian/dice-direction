@@ -336,17 +336,27 @@
     }
     .needle-target-arrow {
       width: 0; height: 0;
-      border-left: 8px solid transparent;
-      border-right: 8px solid transparent;
-      border-bottom: 32px solid #4ecdc4;
-      margin-top: 8px;
-      filter: drop-shadow(0 0 8px rgba(78,205,196,0.9));
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 40px solid #4ecdc4;
+      margin-top: 4px;
+      filter: drop-shadow(0 0 10px currentColor);
     }
-    .needle-target-name {
-      font-size: 11px; font-weight: 800;
-      color: #4ecdc4; margin-top: 3px;
-      text-shadow: 0 0 8px currentColor;
-      letter-spacing: 1px;
+    /* 目标方位文字（固定显示在指南针下方） */
+    .target-info {
+      margin-top: 8px;
+      text-align: center;
+    }
+    .target-info-name {
+      font-size: 1.1rem; font-weight: 800;
+      color: #4ecdc4;
+      text-shadow: 0 0 12px currentColor;
+      letter-spacing: 2px;
+    }
+    .target-info-hint {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.4);
+      margin-top: 2px;
     }
 
     /* 当前朝向文字 */
@@ -679,11 +689,16 @@
         <!-- 目标方位箭头（彩色，根据摇中的方位显示） -->
         <div class="needle-target" id="needleTarget">
           <div class="needle-target-arrow" id="needleTargetArrow"></div>
-          <div class="needle-target-name" id="needleTargetName"></div>
         </div>
         <!-- 中心圆点 -->
         <div class="needle-center"></div>
       </div>
+    </div>
+
+    <!-- 目标方位信息（固定显示） -->
+    <div class="target-info" id="targetInfo" style="display:none">
+      <div class="target-info-name" id="targetInfoName"></div>
+      <div class="target-info-hint">转动手机使箭头指向此方向</div>
     </div>
 
     <!-- 朝向显示 -->
@@ -858,7 +873,8 @@
     var compassDial   = document.getElementById('compassDial');
     var needleTarget  = document.getElementById('needleTarget');
     var needleTargetArrow = document.getElementById('needleTargetArrow');
-    var needleTargetName  = document.getElementById('needleTargetName');
+    var targetInfo        = document.getElementById('targetInfo');
+    var targetInfoName    = document.getElementById('targetInfoName');
     var headingText   = document.getElementById('headingText');
     var headingSub    = document.getElementById('headingSub');
     var sensorTip     = document.getElementById('sensorTip');
@@ -1188,8 +1204,9 @@
         currentTargetDeg = latest.direction.degree;
         needleTargetArrow.style.borderBottomColor = latest.direction.color;
         needleTargetArrow.style.filter = 'drop-shadow(0 0 8px ' + latest.direction.color + ')';
-        needleTargetName.textContent = latest.direction.name;
-        needleTargetName.style.color = latest.direction.color;
+        targetInfo.style.display = 'block';
+        targetInfoName.textContent = latest.direction.name;
+        targetInfoName.style.color = latest.direction.color;
 
         // 更新面板标题
         panelCurPlayer.innerHTML = '<strong>' + latest.player + '</strong> 的方位：<strong style="color:' + latest.direction.color + '">' + latest.direction.name + '</strong>';
@@ -1332,7 +1349,7 @@
       } else {
         livePanel.classList.remove('show');
         currentTargetDeg = null;
-        needleTargetName.textContent = '';
+        targetInfo.style.display = 'none';
       }
     }
 
@@ -1452,7 +1469,7 @@
 
       livePanel.classList.remove('show');
       assignedList.innerHTML = '';
-      needleTargetName.textContent = '';
+      targetInfo.style.display = 'none';
       headingText.textContent = '-- °';
       headingSub.textContent  = '请转动手机查看方向';
     }
