@@ -898,7 +898,6 @@
       
       // 优先使用 deviceorientationabsolute（更精确），fallback 到 deviceorientation
       if ('ondeviceorientationabsolute' in window) {
-        console.log('使用 deviceorientationabsolute 事件');
         window.addEventListener('deviceorientationabsolute', onOrientation, true);
       }
       // 同时监听 deviceorientation 作为 fallback
@@ -907,7 +906,6 @@
       // 2秒后检查传感器是否正常工作
       sensorCheckTimer = setTimeout(function() {
         if (!sensorActive && deviceHeading === null) {
-          console.log('传感器未激活，显示手动旋转');
           // 如果面板已显示，显示手动旋转滑块
           if (livePanel.classList.contains('show')) {
             showManualRotate();
@@ -918,16 +916,12 @@
 
     function initSensor() {
       if (typeof DeviceOrientationEvent === 'undefined') { 
-        console.log('DeviceOrientationEvent 不支持');
         showManualRotate(); 
         return; 
       }
       // 非 iOS 13+（没有 requestPermission）→ 直接注册
       if (typeof DeviceOrientationEvent.requestPermission !== 'function') {
-        console.log('非 iOS 13+ 设备，直接注册传感器');
         registerSensorListeners();
-      } else {
-        console.log('iOS 13+ 设备，等待用户手势请求权限');
       }
       // iOS 13+ 需要在用户手势中调用 requestPermission，延迟到 rollDice 中处理
     }
@@ -1030,7 +1024,6 @@
       // iOS Safari: webkitCompassHeading 最可靠
       if (e.webkitCompassHeading !== undefined && e.webkitCompassHeading !== null) {
         h = e.webkitCompassHeading;
-        console.log('使用 webkitCompassHeading:', h);
       }
       // Android Chrome: 使用 alpha（来自 deviceorientationabsolute 或 deviceorientation）
       else if (e.alpha !== null && e.alpha !== undefined && !isNaN(e.alpha)) {
@@ -1042,14 +1035,9 @@
           // 非 absolute 模式，alpha 可能不准确，尝试使用
           h = 360 - e.alpha;
         }
-        console.log('使用 alpha:', e.alpha, 'absolute:', e.absolute, '计算结果:', h);
       }
       
-      // 记录调试信息（默认开启以便排查问题）
-      console.log('orientation event:', { type: e.type, absolute: e.absolute, alpha: e.alpha, beta: e.beta, gamma: e.gamma, webkitCompassHeading: e.webkitCompassHeading, computed: h });
-      
       if (h === null || isNaN(h)) {
-        console.log('无法计算方向，h 为 null 或 NaN');
         return;
       }
       h = (h + 360) % 360;
@@ -1114,15 +1102,30 @@
     // ========== 更新面板 ==========
     function updateLivePanel() {
       // 更新分配列表
-      assignedList.innerHTML = '';
+      assignedList.textContent = '';
       results.forEach(function(r, i) {
         var isLatest = (i === results.length - 1);
         var row = document.createElement('div');
         row.className = 'assigned-row' + (isLatest ? ' latest' : '');
-        row.innerHTML =
-          '<span class="ar-player">' + r.player + '</span>' +
-          '<span class="ar-dir" style="color:' + r.direction.color + '">' + r.direction.name + '</span>' +
-          (isLatest ? '<span class="ar-badge">当前</span>' : '');
+        
+        var playerSpan = document.createElement('span');
+        playerSpan.className = 'ar-player';
+        playerSpan.textContent = r.player;
+        row.appendChild(playerSpan);
+        
+        var dirSpan = document.createElement('span');
+        dirSpan.className = 'ar-dir';
+        dirSpan.style.color = r.direction.color;
+        dirSpan.textContent = r.direction.name;
+        row.appendChild(dirSpan);
+        
+        if (isLatest) {
+          var badge = document.createElement('span');
+          badge.className = 'ar-badge';
+          badge.textContent = '当前';
+          row.appendChild(badge);
+        }
+        
         assignedList.appendChild(row);
       });
 
@@ -1137,7 +1140,15 @@
         targetInfoName.style.color = latest.direction.color;
 
         // 更新面板标题
-        panelCurPlayer.innerHTML = '<strong>' + latest.player + '</strong> 的方位：<strong style="color:' + latest.direction.color + '">' + latest.direction.name + '</strong>';
+        panelCurPlayer.textContent = '';
+        var strong1 = document.createElement('strong');
+        strong1.textContent = latest.player;
+        panelCurPlayer.appendChild(strong1);
+        panelCurPlayer.appendChild(document.createTextNode(' 的方位：'));
+        var strong2 = document.createElement('strong');
+        strong2.style.color = latest.direction.color;
+        strong2.textContent = latest.direction.name;
+        panelCurPlayer.appendChild(strong2);
 
         // 立即渲染指南针
         if (sensorActive && deviceHeading !== null) {
@@ -1349,13 +1360,26 @@
 
       // 生成列表
       var list = document.getElementById('resultList');
-      list.innerHTML = '';
+      list.textContent = '';
       results.forEach(function(r) {
         var li = document.createElement('li');
-        li.innerHTML =
-          '<span class="result-player">' + r.player + '</span>' +
-          '<span class="result-arrow">→</span>' +
-          '<span class="result-dir" style="color:' + r.direction.color + '">' + r.direction.name + '</span>';
+        
+        var playerSpan = document.createElement('span');
+        playerSpan.className = 'result-player';
+        playerSpan.textContent = r.player;
+        li.appendChild(playerSpan);
+        
+        var arrowSpan = document.createElement('span');
+        arrowSpan.className = 'result-arrow';
+        arrowSpan.textContent = '→';
+        li.appendChild(arrowSpan);
+        
+        var dirSpan = document.createElement('span');
+        dirSpan.className = 'result-dir';
+        dirSpan.style.color = r.direction.color;
+        dirSpan.textContent = r.direction.name;
+        li.appendChild(dirSpan);
+        
         list.appendChild(li);
       });
       document.getElementById('completeBanner').classList.add('show');
@@ -1417,7 +1441,7 @@
       document.getElementById('restartOverlay').classList.remove('show');
 
       livePanel.classList.remove('show');
-      assignedList.innerHTML = '';
+      assignedList.textContent = '';
       targetInfo.style.display = 'none';
       headingText.textContent = '-- °';
       headingSub.textContent  = '请转动手机查看方向';
