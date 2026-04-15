@@ -1082,20 +1082,33 @@
       var sector = Math.round(h / 22.5) % 16;
       resultHeadingText.textContent = Math.round(h) + '°';
       resultHeadingSub.textContent  = '当前朝向：' + DIR_NAMES_16[sector];
-      // 更新4根玩家指针
+      // 更新4根玩家指针（使用最短路径避免0°/360°跳跃）
       resultNeedles.forEach(function(n) {
-        var offset = (n.degree - h + 360) % 360;
-        n.el.style.transform = 'translateX(-50%) rotate(' + offset + 'deg)';
+        var rawOffset = (n.degree - h + 360) % 360;
+        // 选择最短路径
+        var lastAngle = n.lastAngle || 0;
+        var diff = rawOffset - (lastAngle % 360);
+        if (diff > 180) diff -= 360;
+        if (diff < -180) diff += 360;
+        n.lastAngle = lastAngle + diff;
+        n.el.style.transform = 'translateX(-50%) rotate(' + n.lastAngle + 'deg)';
       });
     }
 
     // ========== 当前目标方位 ==========
     var currentTargetDeg = null;
+    var lastNeedleAngle = 0;  // 记录指针上一次的角度，用于平滑跨越0°/360°边界
 
     function updateTargetNeedle(heading) {
       if (currentTargetDeg === null) return;
-      var offset = (currentTargetDeg - (heading || 0) + 360) % 360;
-      needleTarget.style.transform = 'translateX(-50%) rotate(' + offset + 'deg)';
+      // 计算目标相对当前朝向的偏移角度
+      var rawOffset = (currentTargetDeg - (heading || 0) + 360) % 360;
+      // 选择最短路径：如果差值大于180°，则反向旋转
+      var diff = rawOffset - (lastNeedleAngle % 360);
+      if (diff > 180) diff -= 360;
+      if (diff < -180) diff += 360;
+      lastNeedleAngle += diff;
+      needleTarget.style.transform = 'translateX(-50%) rotate(' + lastNeedleAngle + 'deg)';
     }
 
     // ========== 更新面板 ==========
@@ -1307,14 +1320,16 @@
 
         // 计算初始角度
         var deg = r.direction.degree;
+        var initialAngle;
         if (deviceHeading !== null) {
-          var offset = (deg - deviceHeading + 360) % 360;
-          wrap.style.transform = 'translateX(-50%) rotate(' + offset + 'deg)';
+          initialAngle = (deg - deviceHeading + 360) % 360;
+          wrap.style.transform = 'translateX(-50%) rotate(' + initialAngle + 'deg)';
         } else {
-          wrap.style.transform = 'translateX(-50%) rotate(' + deg + 'deg)';
+          initialAngle = deg;
+          wrap.style.transform = 'translateX(-50%) rotate(' + initialAngle + 'deg)';
         }
 
-        resultNeedles.push({ el: wrap, degree: deg });
+        resultNeedles.push({ el: wrap, degree: deg, lastAngle: initialAngle });
       });
 
       // 设置初始朝向
