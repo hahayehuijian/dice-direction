@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>选门 · 预览</title>
+  <title>方位签 · 预览</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -258,63 +258,6 @@
       position: absolute; inset: 0; z-index: 3;
     }
 
-    /* 中文方位标签（固定不旋转） */
-    .compass-label {
-      position: absolute;
-      font-weight: bold;
-      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      pointer-events: none;
-    }
-    .compass-label.label-north {
-      top: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: #ff3b3b;
-      font-size: 16px;
-      text-shadow: 0 0 8px rgba(255,59,59,0.6);
-    }
-    .compass-label.label-south {
-      bottom: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: rgba(255,255,255,0.5);
-      font-size: 14px;
-    }
-    .compass-label.label-east {
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: rgba(255,215,0,0.7);
-      font-size: 14px;
-    }
-    .compass-label.label-west {
-      left: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: rgba(255,215,0,0.7);
-      font-size: 14px;
-    }
-
-    /* 固定红色北方箭头（始终朝上） */
-    .needle-north {
-      position: absolute;
-      left: 50%; top: 5px;
-      transform: translateX(-50%);
-      width: 0; height: 0;
-      border-left: 10px solid transparent;
-      border-right: 10px solid transparent;
-      border-bottom: 38px solid #ff3b3b;
-      filter: drop-shadow(0 0 8px rgba(255,59,59,0.8));
-    }
-    .needle-south {
-      position: absolute;
-      left: 50%; bottom: 5px;
-      transform: translateX(-50%);
-      width: 0; height: 0;
-      border-left: 8px solid transparent;
-      border-right: 8px solid transparent;
-      border-top: 30px solid rgba(255,255,255,0.18);
-    }
     /* 中心圆点 */
     .needle-center {
       position: absolute; left: 50%; top: 50%;
@@ -361,13 +304,16 @@
 
     /* 当前朝向文字 */
     .heading-text {
-      font-size: 1.5rem; font-weight: 800; color: #ffd700;
-      letter-spacing: 2px; text-shadow: 0 0 12px rgba(255,215,0,0.5);
+      font-size: 2.4rem; font-weight: 900; color: #ff3030;
+      letter-spacing: 3px;
+      text-shadow: 0 0 18px rgba(255,48,48,0.75), 0 2px 6px rgba(0,0,0,0.5);
       margin-bottom: 2px;
+      line-height: 1.1;
     }
     .heading-sub {
-      font-size: 0.72rem; color: rgba(255,255,255,0.35);
-      letter-spacing: 2px; margin-bottom: 10px;
+      font-size: 1rem; font-weight: 700; color: #ff6060;
+      letter-spacing: 3px; margin-bottom: 10px;
+      text-shadow: 0 0 10px rgba(255,80,80,0.5);
     }
 
     /* 传感器不可用 */
@@ -440,10 +386,13 @@
       background: linear-gradient(90deg, rgba(255,215,0,0.3) 0%, rgba(255,215,0,0.3) var(--progress, 0%), rgba(255,255,255,0.15) var(--progress, 0%));
     }
     .manual-rotate-value {
-      font-size: 0.85rem;
-      color: #ffd700;
-      margin-top: 6px;
-      font-weight: 600;
+      font-size: 1.8rem;
+      color: #ff3030;
+      margin-top: 8px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-shadow: 0 0 14px rgba(255,48,48,0.65);
+      text-align: center;
     }
 
     /* 已分配列表 */
@@ -539,24 +488,6 @@
     .result-compass-fixed {
       position: absolute; inset: 0; z-index: 3;
     }
-    /* 弹窗内红北针 */
-    .result-needle-north {
-      position: absolute; left: 50%; top: 6px;
-      transform: translateX(-50%);
-      width: 0; height: 0;
-      border-left: 7px solid transparent;
-      border-right: 7px solid transparent;
-      border-bottom: 28px solid #ff3b3b;
-      filter: drop-shadow(0 0 6px rgba(255,59,59,0.7));
-    }
-    .result-needle-south {
-      position: absolute; left: 50%; bottom: 6px;
-      transform: translateX(-50%);
-      width: 0; height: 0;
-      border-left: 6px solid transparent;
-      border-right: 6px solid transparent;
-      border-top: 22px solid rgba(255,255,255,0.15);
-    }
     .result-needle-center {
       position: absolute; left: 50%; top: 50%;
       width: 10px; height: 10px;
@@ -646,7 +577,7 @@
 
   <!-- 标题 -->
   <div class="title">
-    <h1>🧭 选门</h1>
+    <h1>🧭 方位签</h1>
     <p>4人依次点击 · 随机分配四个方向</p>
   </div>
 
@@ -679,13 +610,8 @@
         </svg>
       </div>
 
-      <!-- 固定层：方位文字 + 动态目标指针 + 中心点 -->
+      <!-- 固定层：动态目标指针 + 中心点 -->
       <div class="compass-fixed">
-        <!-- 中文方位（固定不旋转） -->
-        <div class="compass-label label-north">北</div>
-        <div class="compass-label label-south">南</div>
-        <div class="compass-label label-east">东</div>
-        <div class="compass-label label-west">西</div>
         <!-- 目标方位箭头（彩色，根据摇中的方位显示） -->
         <div class="needle-target" id="needleTarget">
           <div class="needle-target-arrow" id="needleTargetArrow"></div>
@@ -716,7 +642,7 @@
 
     <!-- 手动旋转滑块（传感器不可用时使用） -->
     <div class="manual-rotate-wrap" id="manualRotateWrap">
-      <div class="manual-rotate-label">👇 手动调整方向</div>
+      <div class="manual-rotate-label">📱 拖动滑块模拟朝向角度</div>
       <input type="range" class="manual-rotate-slider" id="manualRotateSlider" min="0" max="360" value="0">
       <div class="manual-rotate-value" id="manualRotateValue">正北 0°</div>
     </div>
@@ -728,19 +654,19 @@
   <!-- 四个方位卡片 -->
   <div class="directions-grid">
     <div class="direction-card card-north" id="card-north">
-      <div class="direction-icon">🚪</div>
+      <div class="direction-icon">⬆️</div>
       <div class="direction-name">正北</div>
     </div>
     <div class="direction-card card-east" id="card-east">
-      <div class="direction-icon">🚪</div>
+      <div class="direction-icon">➡️</div>
       <div class="direction-name">正东</div>
     </div>
     <div class="direction-card card-west" id="card-west">
-      <div class="direction-icon">🚪</div>
+      <div class="direction-icon">⬅️</div>
       <div class="direction-name">正西</div>
     </div>
     <div class="direction-card card-south" id="card-south">
-      <div class="direction-icon">🚪</div>
+      <div class="direction-icon">⬇️</div>
       <div class="direction-name">正南</div>
     </div>
   </div>
@@ -769,11 +695,6 @@
           <line x1="62.5" y1="12.5" x2="67.5" y2="17.5" stroke="rgba(255,215,0,0.2)" stroke-width="1" transform="rotate(90,40,40)"/>
           <line x1="12.5" y1="62.5" x2="17.5" y2="67.5" stroke="rgba(255,215,0,0.2)" stroke-width="1" transform="rotate(180,40,40)"/>
           <line x1="62.5" y1="62.5" x2="67.5" y2="67.5" stroke="rgba(255,215,0,0.2)" stroke-width="1" transform="rotate(270,40,40)"/>
-          <!-- 中文方位标签 -->
-          <text x="40" y="19" text-anchor="middle" fill="#ff3b3b"  font-size="11" font-weight="bold" font-family="PingFang SC,sans-serif">北</text>
-          <text x="40" y="69" text-anchor="middle" fill="rgba(255,255,255,0.35)" font-size="9" font-weight="bold" font-family="PingFang SC,sans-serif">南</text>
-          <text x="68" y="44" text-anchor="middle" fill="rgba(255,215,0,0.6)" font-size="9" font-weight="bold" font-family="PingFang SC,sans-serif">东</text>
-          <text x="12" y="44" text-anchor="middle" fill="rgba(255,215,0,0.6)" font-size="9" font-weight="bold" font-family="PingFang SC,sans-serif">西</text>
           <!-- 指针 -->
           <polygon points="40,5 36,40 40,36 44,40" fill="#ff3b3b" opacity="0.9"/>
           <polygon points="40,75 36,40 40,44 44,40" fill="rgba(255,255,255,0.25)"/>
@@ -815,16 +736,10 @@
             <circle cx="100" cy="100" r="96" fill="rgba(10,10,30,0.6)" stroke="rgba(255,215,0,0.18)" stroke-width="2"/>
             <circle cx="100" cy="100" r="72" fill="none" stroke="rgba(255,215,0,0.08)" stroke-width="1"/>
             <g id="resultTickGroup"></g>
-            <text x="100" y="16" text-anchor="middle" fill="#ff3b3b" font-size="16" font-weight="bold" font-family="PingFang SC,Microsoft YaHei,sans-serif">北</text>
-            <text x="100" y="192" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14" font-weight="bold" font-family="PingFang SC,Microsoft YaHei,sans-serif">南</text>
-            <text x="186" y="104" text-anchor="middle" fill="rgba(255,215,0,0.7)" font-size="14" font-weight="bold" font-family="PingFang SC,Microsoft YaHei,sans-serif">东</text>
-            <text x="14" y="104" text-anchor="middle" fill="rgba(255,215,0,0.7)" font-size="14" font-weight="bold" font-family="PingFang SC,Microsoft YaHei,sans-serif">西</text>
           </svg>
         </div>
         <div class="result-compass-fixed" id="resultCompassFixed">
           <!-- 玩家指针将由 JS 动态插入 -->
-          <div class="result-needle-north"></div>
-          <div class="result-needle-south"></div>
           <div class="result-needle-center"></div>
         </div>
       </div>
@@ -1035,7 +950,7 @@
       
       wrap.classList.add('show');
       headingText.textContent = '0°';
-      headingSub.textContent = '手动调整方向';
+      headingSub.textContent = '模拟朝向（拖动滑块）';
       
       // 更新进度条背景
       function updateProgress(deg) {
@@ -1350,6 +1265,11 @@
         livePanel.classList.remove('show');
         currentTargetDeg = null;
         targetInfo.style.display = 'none';
+        // 重置指南针到初始状态
+        compassDial.style.transform = 'rotate(0deg)';
+        needleTarget.style.transform = 'translateX(-50%) rotate(0deg)';
+        headingText.textContent = '-- °';
+        headingSub.textContent = '请转动手机查看方向';
       }
     }
 
@@ -1377,8 +1297,13 @@
         wrap.appendChild(arrow);
         wrap.appendChild(label);
 
-        // 插到红北针前面
-        resultCompassFixed.insertBefore(wrap, resultCompassFixed.querySelector('.result-needle-north'));
+        // 插入到中心点前面
+        var centerDot = resultCompassFixed.querySelector('.result-needle-center');
+        if (centerDot) {
+          resultCompassFixed.insertBefore(wrap, centerDot);
+        } else {
+          resultCompassFixed.appendChild(wrap);
+        }
 
         // 计算初始角度
         var deg = r.direction.degree;
@@ -1444,11 +1369,20 @@
 
     // ========== 重置 ==========
     function resetGame() {
+      // 清理定时器
+      if (sensorCheckTimer) {
+        clearTimeout(sensorCheckTimer);
+        sensorCheckTimer = null;
+      }
+
       currentRound = 0;
       remaining = DIRECTIONS.slice();
       results = [];
       isRolling = false;
       currentTargetDeg = null;
+      deviceHeading = null;
+      sensorActive = false;
+      manualRotateInitialized = false;
 
       DIRECTIONS.forEach(function(d) {
         var card = document.getElementById('card-' + d.id);
@@ -1472,6 +1406,18 @@
       targetInfo.style.display = 'none';
       headingText.textContent = '-- °';
       headingSub.textContent  = '请转动手机查看方向';
+      headingText.style.display = '';
+      headingSub.style.display = '';
+      sensorTip.style.display = 'none';
+
+      // 隐藏手动旋转滑块
+      var manualWrap = document.getElementById('manualRotateWrap');
+      if (manualWrap) manualWrap.classList.remove('show');
+
+      // 重置弹窗状态
+      resultBannerActive = false;
+      resultNeedles = [];
+      resultCompassFixed.querySelectorAll('.result-player-needle').forEach(function(el){ el.remove(); });
     }
 
     // ========== 键盘 ==========
