@@ -1052,30 +1052,65 @@
       return DIR_NAMES_16[sector];
     }
 
+    // 计算正确的指南针航向，考虑设备倾斜
+    function computeHeading(e) {
+      if (!e) return null;
+      
+      // iOS: webkitCompassHeading 已经考虑了设备方向，直接使用
+      if (e.webkitCompassHeading !== undefined && e.webkitCompassHeading !== null && !isNaN(e.webkitCompassHeading)) {
+        return e.webkitCompassHeading;
+      }
+      
+      // Android: 需要从 alpha, beta, gamma 计算
+      var alpha = e.alpha;
+      var beta = e.beta;
+      var gamma = e.gamma;
+      
+      if (alpha === null || alpha === undefined || isNaN(alpha)) {
+        return null;
+      }
+      
+      // 如果设备接近水平（屏幕朝上），直接使用 alpha
+      if ((beta === null || Math.abs(beta) < 30) && (gamma === null || Math.abs(gamma) < 30)) {
+        return alpha;
+      }
+      
+      // 设备倾斜时，需要计算投影到水平面的航向
+      // 将角度转换为弧度
+      var alphaRad = alpha * Math.PI / 180;
+      var betaRad = (beta || 0) * Math.PI / 180;
+      var gammaRad = (gamma || 0) * Math.PI / 180;
+      
+      // 计算旋转矩阵并提取航向角
+      // 参考: https://w3c.github.io/deviceorientation/spec-source-orientation.html
+      var cA = Math.cos(alphaRad);
+      var sA = Math.sin(alphaRad);
+      var cB = Math.cos(betaRad);
+      var sB = Math.sin(betaRad);
+      var cG = Math.cos(gammaRad);
+      var sG = Math.sin(gammaRad);
+      
+      // 计算变换后的磁力计向量（简化计算）
+      var x = -cA * sG - sA * sB * cG;
+      var y = -sA * sG + cA * sB * cG;
+      
+      // 计算航向角（从正北顺时针）
+      var heading = Math.atan2(y, x) * 180 / Math.PI;
+      heading = (heading + 360) % 360;
+      
+      return heading;
+    }
+
     function onOrientation(e) {
       if (!e) return;
-      var h = null;
-      // iOS Safari: webkitCompassHeading 最可靠（0=北，顺时针增加）
-      var webkitHeading = e.webkitCompassHeading;
-      if (webkitHeading !== undefined && webkitHeading !== null && !isNaN(webkitHeading)) {
-        h = webkitHeading;
-      }
-      // Android Chrome: 使用 alpha（0=北，顺时针增加，与iOS一致）
-      else {
-        // 优先使用 compassHeading 如果存在
-        if (e.compassHeading !== undefined && e.compassHeading !== null && !isNaN(e.compassHeading)) {
-          h = e.compassHeading;
-        }
-        // 使用 alpha 计算
-        else if (e.alpha !== null && e.alpha !== undefined && !isNaN(e.alpha)) {
-          // alpha: 0=北, 90=东, 180=南, 270=西（顺时针，与webkitCompassHeading一致）
-          h = e.alpha;
-        }
-      }
-
+      
+      // 使用改进的航向计算
+      var h = computeHeading(e);
+      
       if (h === null || isNaN(h)) {
         return;
       }
+      
       h = (h + 360) % 360;
       deviceHeading = h;
       sensorActive = true;
