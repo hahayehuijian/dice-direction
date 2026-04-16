@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>选门 · 预览</title>
+  <title>方位签 · 预览</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -258,63 +258,6 @@
       position: absolute; inset: 0; z-index: 3;
     }
 
-    /* 中文方位标签（固定不旋转） */
-    .compass-label {
-      position: absolute;
-      font-weight: bold;
-      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      pointer-events: none;
-    }
-    .compass-label.label-north {
-      top: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: #ff3b3b;
-      font-size: 16px;
-      text-shadow: 0 0 8px rgba(255,59,59,0.6);
-    }
-    .compass-label.label-south {
-      bottom: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: rgba(255,255,255,0.5);
-      font-size: 14px;
-    }
-    .compass-label.label-east {
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: rgba(255,215,0,0.7);
-      font-size: 14px;
-    }
-    .compass-label.label-west {
-      left: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: rgba(255,215,0,0.7);
-      font-size: 14px;
-    }
-
-    /* 固定红色北方箭头（始终朝上） */
-    .needle-north {
-      position: absolute;
-      left: 50%; top: 5px;
-      transform: translateX(-50%);
-      width: 0; height: 0;
-      border-left: 10px solid transparent;
-      border-right: 10px solid transparent;
-      border-bottom: 38px solid #ff3b3b;
-      filter: drop-shadow(0 0 8px rgba(255,59,59,0.8));
-    }
-    .needle-south {
-      position: absolute;
-      left: 50%; bottom: 5px;
-      transform: translateX(-50%);
-      width: 0; height: 0;
-      border-left: 8px solid transparent;
-      border-right: 8px solid transparent;
-      border-top: 30px solid rgba(255,255,255,0.18);
-    }
     /* 中心圆点 */
     .needle-center {
       position: absolute; left: 50%; top: 50%;
@@ -361,13 +304,16 @@
 
     /* 当前朝向文字 */
     .heading-text {
-      font-size: 1.5rem; font-weight: 800; color: #ffd700;
-      letter-spacing: 2px; text-shadow: 0 0 12px rgba(255,215,0,0.5);
+      font-size: 2.4rem; font-weight: 900; color: #ff3030;
+      letter-spacing: 3px;
+      text-shadow: 0 0 18px rgba(255,48,48,0.75), 0 2px 6px rgba(0,0,0,0.5);
       margin-bottom: 2px;
+      line-height: 1.1;
     }
     .heading-sub {
-      font-size: 0.72rem; color: rgba(255,255,255,0.35);
-      letter-spacing: 2px; margin-bottom: 10px;
+      font-size: 1rem; font-weight: 700; color: #ff6060;
+      letter-spacing: 3px; margin-bottom: 10px;
+      text-shadow: 0 0 10px rgba(255,80,80,0.5);
     }
 
     /* 传感器不可用 */
@@ -440,10 +386,13 @@
       background: linear-gradient(90deg, rgba(255,215,0,0.3) 0%, rgba(255,215,0,0.3) var(--progress, 0%), rgba(255,255,255,0.15) var(--progress, 0%));
     }
     .manual-rotate-value {
-      font-size: 0.85rem;
-      color: #ffd700;
-      margin-top: 6px;
-      font-weight: 600;
+      font-size: 1.8rem;
+      color: #ff3030;
+      margin-top: 8px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-shadow: 0 0 14px rgba(255,48,48,0.65);
+      text-align: center;
     }
 
     /* 已分配列表 */
@@ -539,24 +488,6 @@
     .result-compass-fixed {
       position: absolute; inset: 0; z-index: 3;
     }
-    /* 弹窗内红北针 */
-    .result-needle-north {
-      position: absolute; left: 50%; top: 6px;
-      transform: translateX(-50%);
-      width: 0; height: 0;
-      border-left: 7px solid transparent;
-      border-right: 7px solid transparent;
-      border-bottom: 28px solid #ff3b3b;
-      filter: drop-shadow(0 0 6px rgba(255,59,59,0.7));
-    }
-    .result-needle-south {
-      position: absolute; left: 50%; bottom: 6px;
-      transform: translateX(-50%);
-      width: 0; height: 0;
-      border-left: 6px solid transparent;
-      border-right: 6px solid transparent;
-      border-top: 22px solid rgba(255,255,255,0.15);
-    }
     .result-needle-center {
       position: absolute; left: 50%; top: 50%;
       width: 10px; height: 10px;
@@ -646,7 +577,7 @@
 
   <!-- 标题 -->
   <div class="title">
-    <h1>🧭 选门</h1>
+    <h1>🧭 方位签</h1>
     <p>4人依次点击 · 随机分配四个方向</p>
   </div>
 
@@ -679,13 +610,8 @@
         </svg>
       </div>
 
-      <!-- 固定层：方位文字 + 动态目标指针 + 中心点 -->
+      <!-- 固定层：动态目标指针 + 中心点 -->
       <div class="compass-fixed">
-        <!-- 中文方位（固定不旋转） -->
-        <div class="compass-label label-north">北</div>
-        <div class="compass-label label-south">南</div>
-        <div class="compass-label label-east">东</div>
-        <div class="compass-label label-west">西</div>
         <!-- 目标方位箭头（彩色，根据摇中的方位显示） -->
         <div class="needle-target" id="needleTarget">
           <div class="needle-target-arrow" id="needleTargetArrow"></div>
@@ -716,7 +642,7 @@
 
     <!-- 手动旋转滑块（传感器不可用时使用） -->
     <div class="manual-rotate-wrap" id="manualRotateWrap">
-      <div class="manual-rotate-label">👇 手动调整方向</div>
+      <div class="manual-rotate-label">📱 拖动滑块模拟朝向角度</div>
       <input type="range" class="manual-rotate-slider" id="manualRotateSlider" min="0" max="360" value="0">
       <div class="manual-rotate-value" id="manualRotateValue">正北 0°</div>
     </div>
@@ -728,19 +654,19 @@
   <!-- 四个方位卡片 -->
   <div class="directions-grid">
     <div class="direction-card card-north" id="card-north">
-      <div class="direction-icon">🚪</div>
+      <div class="direction-icon">⬆️</div>
       <div class="direction-name">正北</div>
     </div>
     <div class="direction-card card-east" id="card-east">
-      <div class="direction-icon">🚪</div>
+      <div class="direction-icon">➡️</div>
       <div class="direction-name">正东</div>
     </div>
     <div class="direction-card card-west" id="card-west">
-      <div class="direction-icon">🚪</div>
+      <div class="direction-icon">⬅️</div>
       <div class="direction-name">正西</div>
     </div>
     <div class="direction-card card-south" id="card-south">
-      <div class="direction-icon">🚪</div>
+      <div class="direction-icon">⬇️</div>
       <div class="direction-name">正南</div>
     </div>
   </div>
@@ -769,11 +695,6 @@
           <line x1="62.5" y1="12.5" x2="67.5" y2="17.5" stroke="rgba(255,215,0,0.2)" stroke-width="1" transform="rotate(90,40,40)"/>
           <line x1="12.5" y1="62.5" x2="17.5" y2="67.5" stroke="rgba(255,215,0,0.2)" stroke-width="1" transform="rotate(180,40,40)"/>
           <line x1="62.5" y1="62.5" x2="67.5" y2="67.5" stroke="rgba(255,215,0,0.2)" stroke-width="1" transform="rotate(270,40,40)"/>
-          <!-- 中文方位标签 -->
-          <text x="40" y="19" text-anchor="middle" fill="#ff3b3b"  font-size="11" font-weight="bold" font-family="PingFang SC,sans-serif">北</text>
-          <text x="40" y="69" text-anchor="middle" fill="rgba(255,255,255,0.35)" font-size="9" font-weight="bold" font-family="PingFang SC,sans-serif">南</text>
-          <text x="68" y="44" text-anchor="middle" fill="rgba(255,215,0,0.6)" font-size="9" font-weight="bold" font-family="PingFang SC,sans-serif">东</text>
-          <text x="12" y="44" text-anchor="middle" fill="rgba(255,215,0,0.6)" font-size="9" font-weight="bold" font-family="PingFang SC,sans-serif">西</text>
           <!-- 指针 -->
           <polygon points="40,5 36,40 40,36 44,40" fill="#ff3b3b" opacity="0.9"/>
           <polygon points="40,75 36,40 40,44 44,40" fill="rgba(255,255,255,0.25)"/>
@@ -815,16 +736,10 @@
             <circle cx="100" cy="100" r="96" fill="rgba(10,10,30,0.6)" stroke="rgba(255,215,0,0.18)" stroke-width="2"/>
             <circle cx="100" cy="100" r="72" fill="none" stroke="rgba(255,215,0,0.08)" stroke-width="1"/>
             <g id="resultTickGroup"></g>
-            <text x="100" y="16" text-anchor="middle" fill="#ff3b3b" font-size="16" font-weight="bold" font-family="PingFang SC,Microsoft YaHei,sans-serif">北</text>
-            <text x="100" y="192" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="14" font-weight="bold" font-family="PingFang SC,Microsoft YaHei,sans-serif">南</text>
-            <text x="186" y="104" text-anchor="middle" fill="rgba(255,215,0,0.7)" font-size="14" font-weight="bold" font-family="PingFang SC,Microsoft YaHei,sans-serif">东</text>
-            <text x="14" y="104" text-anchor="middle" fill="rgba(255,215,0,0.7)" font-size="14" font-weight="bold" font-family="PingFang SC,Microsoft YaHei,sans-serif">西</text>
           </svg>
         </div>
         <div class="result-compass-fixed" id="resultCompassFixed">
           <!-- 玩家指针将由 JS 动态插入 -->
-          <div class="result-needle-north"></div>
-          <div class="result-needle-south"></div>
           <div class="result-needle-center"></div>
         </div>
       </div>
@@ -891,87 +806,66 @@
 
     // ========== 工具 ==========
     function randInt(max) {
+      if (max <= 0) return 0;
       var arr = new Uint32Array(1);
-      crypto.getRandomValues(arr);
+      if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        crypto.getRandomValues(arr);
+      } else {
+        arr[0] = Math.floor(Math.random() * 0x100000000);
+      }
       return arr[0] % max;
     }
     function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
 
-    // ========== 绘制大指南针刻度 ==========
-    (function drawTicks() {
-      var g = document.getElementById('tickGroup');
-      var cx = 100, cy = 100, r = 93;
-      for (var i = 0; i < 360; i += 5) {
-        var rad = (i - 90) * Math.PI / 180;
-        var isQ = i % 90 === 0;
-        var isM = i % 30 === 0;
-        var len = isQ ? 18 : isM ? 12 : 6;
-        var inner = r - len;
-        var x1 = cx + Math.cos(rad) * r;
-        var y1 = cy + Math.sin(rad) * r;
-        var x2 = cx + Math.cos(rad) * inner;
-        var y2 = cy + Math.sin(rad) * inner;
-        var line = document.createElementNS('http://www.w3.org/2000/svg','line');
-        line.setAttribute('x1', x1.toFixed(2)); line.setAttribute('y1', y1.toFixed(2));
-        line.setAttribute('x2', x2.toFixed(2)); line.setAttribute('y2', y2.toFixed(2));
-        line.setAttribute('stroke', isQ ? 'rgba(255,215,0,0.55)' : isM ? 'rgba(255,215,0,0.3)' : 'rgba(255,215,0,0.14)');
-        line.setAttribute('stroke-width', isQ ? '2.5' : isM ? '1.8' : '1');
-        g.appendChild(line);
-
-        // 30度数字标注（跳过90度主方位）
-        if (isM && !isQ) {
-          var lr = r - 26;
-          var lx = cx + Math.cos(rad) * lr;
-          var ly = cy + Math.sin(rad) * lr;
-          var t = document.createElementNS('http://www.w3.org/2000/svg','text');
-          t.setAttribute('x', lx.toFixed(2)); t.setAttribute('y', ly.toFixed(2));
-          t.setAttribute('text-anchor','middle'); t.setAttribute('dominant-baseline','middle');
-          t.setAttribute('fill','rgba(255,215,0,0.3)');
-          t.setAttribute('font-size','9');
-          t.setAttribute('font-family','PingFang SC,Microsoft YaHei,sans-serif');
-          t.textContent = i;
-          g.appendChild(t);
-        }
-      }
-    })();
-
-    // 弹窗内指南针刻度
-    (function drawResultTicks() {
-      var g = document.getElementById('resultTickGroup');
+    // ========== 绘制指南针刻度（通用函数）==========
+    function drawCompassTicks(groupId, radius, showNumbers) {
+      var g = document.getElementById(groupId);
       if (!g) return;
-      var cx = 100, cy = 100, r = 93;
+      var cx = 100, cy = 100, r = radius;
+      var svgNS = 'http://www.w3.org/2000/svg';
+      
       for (var i = 0; i < 360; i += 5) {
         var rad = (i - 90) * Math.PI / 180;
         var isQ = i % 90 === 0;
         var isM = i % 30 === 0;
         var len = isQ ? 18 : isM ? 12 : 6;
         var inner = r - len;
-        var x1 = cx + Math.cos(rad) * r;
-        var y1 = cy + Math.sin(rad) * r;
-        var x2 = cx + Math.cos(rad) * inner;
-        var y2 = cy + Math.sin(rad) * inner;
-        var line = document.createElementNS('http://www.w3.org/2000/svg','line');
-        line.setAttribute('x1', x1.toFixed(2)); line.setAttribute('y1', y1.toFixed(2));
-        line.setAttribute('x2', x2.toFixed(2)); line.setAttribute('y2', y2.toFixed(2));
+        var cos = Math.cos(rad);
+        var sin = Math.sin(rad);
+        var x1 = cx + cos * r;
+        var y1 = cy + sin * r;
+        var x2 = cx + cos * inner;
+        var y2 = cy + sin * inner;
+        var line = document.createElementNS(svgNS, 'line');
+        line.setAttribute('x1', x1.toFixed(2));
+        line.setAttribute('y1', y1.toFixed(2));
+        line.setAttribute('x2', x2.toFixed(2));
+        line.setAttribute('y2', y2.toFixed(2));
         line.setAttribute('stroke', isQ ? 'rgba(255,215,0,0.55)' : isM ? 'rgba(255,215,0,0.3)' : 'rgba(255,215,0,0.14)');
         line.setAttribute('stroke-width', isQ ? '2.5' : isM ? '1.8' : '1');
         g.appendChild(line);
 
-        if (isM && !isQ) {
+        if (showNumbers && isM && !isQ) {
           var lr = r - 26;
-          var lx = cx + Math.cos(rad) * lr;
-          var ly = cy + Math.sin(rad) * lr;
-          var t = document.createElementNS('http://www.w3.org/2000/svg','text');
-          t.setAttribute('x', lx.toFixed(2)); t.setAttribute('y', ly.toFixed(2));
-          t.setAttribute('text-anchor','middle'); t.setAttribute('dominant-baseline','middle');
-          t.setAttribute('fill','rgba(255,215,0,0.3)');
-          t.setAttribute('font-size','9');
-          t.setAttribute('font-family','PingFang SC,Microsoft YaHei,sans-serif');
-          t.textContent = i;
+          var lx = cx + cos * lr;
+          var ly = cy + sin * lr;
+          var t = document.createElementNS(svgNS, 'text');
+          t.setAttribute('x', lx.toFixed(2));
+          t.setAttribute('y', ly.toFixed(2));
+          t.setAttribute('text-anchor', 'middle');
+          t.setAttribute('dominant-baseline', 'middle');
+          t.setAttribute('fill', 'rgba(255,215,0,0.3)');
+          t.setAttribute('font-size', '9');
+          t.setAttribute('font-family', 'PingFang SC,Microsoft YaHei,sans-serif');
+          t.textContent = String(i);
           g.appendChild(t);
         }
       }
-    })();
+    }
+
+    // 初始化两个指南针刻度
+    drawCompassTicks('tickGroup', 93, true);
+    drawCompassTicks('resultTickGroup', 93, false);
 
     // ========== 传感器 ==========
     var sensorListenersRegistered = false;
@@ -983,7 +877,6 @@
       
       // 优先使用 deviceorientationabsolute（更精确），fallback 到 deviceorientation
       if ('ondeviceorientationabsolute' in window) {
-        console.log('使用 deviceorientationabsolute 事件');
         window.addEventListener('deviceorientationabsolute', onOrientation, true);
       }
       // 同时监听 deviceorientation 作为 fallback
@@ -992,7 +885,6 @@
       // 2秒后检查传感器是否正常工作
       sensorCheckTimer = setTimeout(function() {
         if (!sensorActive && deviceHeading === null) {
-          console.log('传感器未激活，显示手动旋转');
           // 如果面板已显示，显示手动旋转滑块
           if (livePanel.classList.contains('show')) {
             showManualRotate();
@@ -1003,16 +895,12 @@
 
     function initSensor() {
       if (typeof DeviceOrientationEvent === 'undefined') { 
-        console.log('DeviceOrientationEvent 不支持');
         showManualRotate(); 
         return; 
       }
       // 非 iOS 13+（没有 requestPermission）→ 直接注册
       if (typeof DeviceOrientationEvent.requestPermission !== 'function') {
-        console.log('非 iOS 13+ 设备，直接注册传感器');
         registerSensorListeners();
-      } else {
-        console.log('iOS 13+ 设备，等待用户手势请求权限');
       }
       // iOS 13+ 需要在用户手势中调用 requestPermission，延迟到 rollDice 中处理
     }
@@ -1027,6 +915,8 @@
       var slider = document.getElementById('manualRotateSlider');
       var value = document.getElementById('manualRotateValue');
       
+      if (!wrap || !slider || !value) return;
+      
       // 如果已经初始化过，只显示即可
       if (manualRotateInitialized) {
         wrap.classList.add('show');
@@ -1034,8 +924,8 @@
       }
       
       wrap.classList.add('show');
-      headingText.textContent = '0°';
-      headingSub.textContent = '手动调整方向';
+      if (headingText) headingText.textContent = '0°';
+      if (headingSub) headingSub.textContent = '模拟朝向（拖动滑块）';
       
       // 更新进度条背景
       function updateProgress(deg) {
@@ -1058,7 +948,7 @@
       
       // 监听滑块变化（使用 input 事件但节流）
       slider.addEventListener('input', function() {
-        lastDeg = parseInt(this.value);
+        lastDeg = parseInt(this.value, 10) || 0;
         if (!pendingUpdate) {
           pendingUpdate = true;
           requestAnimationFrame(doUpdate);
@@ -1111,30 +1001,22 @@
     var DIR_NAMES_16 = ['北','北北东','东北','东北东','东','东南东','东南','南南东','南','南南西','西南','西南西','西','西北西','西北','北北西'];
 
     function onOrientation(e) {
+      if (!e) return;
       var h = null;
       // iOS Safari: webkitCompassHeading 最可靠
-      if (e.webkitCompassHeading !== undefined && e.webkitCompassHeading !== null) {
-        h = e.webkitCompassHeading;
-        console.log('使用 webkitCompassHeading:', h);
+      var webkitHeading = e.webkitCompassHeading;
+      if (webkitHeading !== undefined && webkitHeading !== null && !isNaN(webkitHeading)) {
+        h = webkitHeading;
       }
-      // Android Chrome: 使用 alpha（来自 deviceorientationabsolute 或 deviceorientation）
-      else if (e.alpha !== null && e.alpha !== undefined && !isNaN(e.alpha)) {
-        // deviceorientationabsolute 提供的是相对于地理北极的角度
-        // deviceorientation 提供的 alpha 是相对于初始位置的，需要处理
-        if (e.absolute) {
-          h = 360 - e.alpha;
-        } else {
-          // 非 absolute 模式，alpha 可能不准确，尝试使用
-          h = 360 - e.alpha;
+      // Android Chrome: 使用 alpha
+      else {
+        var alpha = e.alpha;
+        if (alpha !== null && alpha !== undefined && !isNaN(alpha)) {
+          h = 360 - alpha;
         }
-        console.log('使用 alpha:', e.alpha, 'absolute:', e.absolute, '计算结果:', h);
       }
-      
-      // 记录调试信息（默认开启以便排查问题）
-      console.log('orientation event:', { type: e.type, absolute: e.absolute, alpha: e.alpha, beta: e.beta, gamma: e.gamma, webkitCompassHeading: e.webkitCompassHeading, computed: h });
       
       if (h === null || isNaN(h)) {
-        console.log('无法计算方向，h 为 null 或 NaN');
         return;
       }
       h = (h + 360) % 360;
@@ -1151,50 +1033,85 @@
     }
 
     function updateCompassUI(h) {
+      if (!compassDial || !headingText || !headingSub) return;
+      if (typeof h !== 'number' || isNaN(h)) return;
       // 刻度盘反向旋转
       compassDial.style.transform = 'rotate(' + (-h) + 'deg)';
       // 朝向文字
       var sector = Math.round(h / 22.5) % 16;
       headingText.textContent = Math.round(h) + '°';
-      headingSub.textContent  = '当前朝向：' + DIR_NAMES_16[sector];
+      headingSub.textContent = '当前朝向：' + DIR_NAMES_16[sector];
       // 更新目标指针
       updateTargetNeedle(h);
     }
 
     // 弹窗内指南针 UI 更新
     function updateResultCompassUI(h) {
+      if (!resultCompassDial || !resultHeadingText || !resultHeadingSub) return;
+      if (typeof h !== 'number' || isNaN(h)) return;
       resultCompassDial.style.transform = 'rotate(' + (-h) + 'deg)';
       var sector = Math.round(h / 22.5) % 16;
       resultHeadingText.textContent = Math.round(h) + '°';
-      resultHeadingSub.textContent  = '当前朝向：' + DIR_NAMES_16[sector];
-      // 更新4根玩家指针
-      resultNeedles.forEach(function(n) {
-        var offset = (n.degree - h + 360) % 360;
-        n.el.style.transform = 'translateX(-50%) rotate(' + offset + 'deg)';
-      });
+      resultHeadingSub.textContent = '当前朝向：' + DIR_NAMES_16[sector];
+      // 更新4根玩家指针（使用最短路径避免0°/360°跳跃）
+      if (Array.isArray(resultNeedles)) {
+        resultNeedles.forEach(function(n) {
+          if (!n || !n.el) return;
+          var rawOffset = (n.degree - h + 360) % 360;
+          var lastAngle = n.lastAngle || 0;
+          var diff = rawOffset - (lastAngle % 360);
+          if (diff > 180) diff -= 360;
+          if (diff < -180) diff += 360;
+          n.lastAngle = lastAngle + diff;
+          n.el.style.transform = 'translateX(-50%) rotate(' + n.lastAngle + 'deg)';
+        });
+      }
     }
 
     // ========== 当前目标方位 ==========
     var currentTargetDeg = null;
+    var lastNeedleAngle = 0;  // 记录指针上一次的角度，用于平滑跨越0°/360°边界
 
     function updateTargetNeedle(heading) {
-      if (currentTargetDeg === null) return;
-      var offset = (currentTargetDeg - (heading || 0) + 360) % 360;
-      needleTarget.style.transform = 'translateX(-50%) rotate(' + offset + 'deg)';
+      if (currentTargetDeg === null || !needleTarget) return;
+      var safeHeading = (typeof heading === 'number' && !isNaN(heading)) ? heading : 0;
+      // 计算目标相对当前朝向的偏移角度
+      var rawOffset = (currentTargetDeg - safeHeading + 360) % 360;
+      // 选择最短路径：如果差值大于180°，则反向旋转
+      var diff = rawOffset - (lastNeedleAngle % 360);
+      if (diff > 180) diff -= 360;
+      if (diff < -180) diff += 360;
+      lastNeedleAngle += diff;
+      needleTarget.style.transform = 'translateX(-50%) rotate(' + lastNeedleAngle + 'deg)';
     }
 
     // ========== 更新面板 ==========
     function updateLivePanel() {
       // 更新分配列表
-      assignedList.innerHTML = '';
+      assignedList.textContent = '';
       results.forEach(function(r, i) {
         var isLatest = (i === results.length - 1);
         var row = document.createElement('div');
         row.className = 'assigned-row' + (isLatest ? ' latest' : '');
-        row.innerHTML =
-          '<span class="ar-player">' + r.player + '</span>' +
-          '<span class="ar-dir" style="color:' + r.direction.color + '">' + r.direction.name + '</span>' +
-          (isLatest ? '<span class="ar-badge">当前</span>' : '');
+        
+        var playerSpan = document.createElement('span');
+        playerSpan.className = 'ar-player';
+        playerSpan.textContent = r.player;
+        row.appendChild(playerSpan);
+        
+        var dirSpan = document.createElement('span');
+        dirSpan.className = 'ar-dir';
+        dirSpan.style.color = r.direction.color;
+        dirSpan.textContent = r.direction.name;
+        row.appendChild(dirSpan);
+        
+        if (isLatest) {
+          var badge = document.createElement('span');
+          badge.className = 'ar-badge';
+          badge.textContent = '当前';
+          row.appendChild(badge);
+        }
+        
         assignedList.appendChild(row);
       });
 
@@ -1209,7 +1126,15 @@
         targetInfoName.style.color = latest.direction.color;
 
         // 更新面板标题
-        panelCurPlayer.innerHTML = '<strong>' + latest.player + '</strong> 的方位：<strong style="color:' + latest.direction.color + '">' + latest.direction.name + '</strong>';
+        panelCurPlayer.textContent = '';
+        var strong1 = document.createElement('strong');
+        strong1.textContent = latest.player;
+        panelCurPlayer.appendChild(strong1);
+        panelCurPlayer.appendChild(document.createTextNode(' 的方位：'));
+        var strong2 = document.createElement('strong');
+        strong2.style.color = latest.direction.color;
+        strong2.textContent = latest.direction.name;
+        panelCurPlayer.appendChild(strong2);
 
         // 立即渲染指南针
         if (sensorActive && deviceHeading !== null) {
@@ -1350,6 +1275,11 @@
         livePanel.classList.remove('show');
         currentTargetDeg = null;
         targetInfo.style.display = 'none';
+        // 重置指南针到初始状态
+        compassDial.style.transform = 'rotate(0deg)';
+        needleTarget.style.transform = 'translateX(-50%) rotate(0deg)';
+        headingText.textContent = '-- °';
+        headingSub.textContent = '请转动手机查看方向';
       }
     }
 
@@ -1377,19 +1307,26 @@
         wrap.appendChild(arrow);
         wrap.appendChild(label);
 
-        // 插到红北针前面
-        resultCompassFixed.insertBefore(wrap, resultCompassFixed.querySelector('.result-needle-north'));
+        // 插入到中心点前面
+        var centerDot = resultCompassFixed.querySelector('.result-needle-center');
+        if (centerDot) {
+          resultCompassFixed.insertBefore(wrap, centerDot);
+        } else {
+          resultCompassFixed.appendChild(wrap);
+        }
 
         // 计算初始角度
         var deg = r.direction.degree;
+        var initialAngle;
         if (deviceHeading !== null) {
-          var offset = (deg - deviceHeading + 360) % 360;
-          wrap.style.transform = 'translateX(-50%) rotate(' + offset + 'deg)';
+          initialAngle = (deg - deviceHeading + 360) % 360;
+          wrap.style.transform = 'translateX(-50%) rotate(' + initialAngle + 'deg)';
         } else {
-          wrap.style.transform = 'translateX(-50%) rotate(' + deg + 'deg)';
+          initialAngle = deg;
+          wrap.style.transform = 'translateX(-50%) rotate(' + initialAngle + 'deg)';
         }
 
-        resultNeedles.push({ el: wrap, degree: deg });
+        resultNeedles.push({ el: wrap, degree: deg, lastAngle: initialAngle });
       });
 
       // 设置初始朝向
@@ -1409,13 +1346,26 @@
 
       // 生成列表
       var list = document.getElementById('resultList');
-      list.innerHTML = '';
+      list.textContent = '';
       results.forEach(function(r) {
         var li = document.createElement('li');
-        li.innerHTML =
-          '<span class="result-player">' + r.player + '</span>' +
-          '<span class="result-arrow">→</span>' +
-          '<span class="result-dir" style="color:' + r.direction.color + '">' + r.direction.name + '</span>';
+        
+        var playerSpan = document.createElement('span');
+        playerSpan.className = 'result-player';
+        playerSpan.textContent = r.player;
+        li.appendChild(playerSpan);
+        
+        var arrowSpan = document.createElement('span');
+        arrowSpan.className = 'result-arrow';
+        arrowSpan.textContent = '→';
+        li.appendChild(arrowSpan);
+        
+        var dirSpan = document.createElement('span');
+        dirSpan.className = 'result-dir';
+        dirSpan.style.color = r.direction.color;
+        dirSpan.textContent = r.direction.name;
+        li.appendChild(dirSpan);
+        
         list.appendChild(li);
       });
       document.getElementById('completeBanner').classList.add('show');
@@ -1444,11 +1394,20 @@
 
     // ========== 重置 ==========
     function resetGame() {
+      // 清理定时器
+      if (sensorCheckTimer) {
+        clearTimeout(sensorCheckTimer);
+        sensorCheckTimer = null;
+      }
+
       currentRound = 0;
       remaining = DIRECTIONS.slice();
       results = [];
       isRolling = false;
       currentTargetDeg = null;
+      deviceHeading = null;
+      sensorActive = false;
+      manualRotateInitialized = false;
 
       DIRECTIONS.forEach(function(d) {
         var card = document.getElementById('card-' + d.id);
@@ -1468,10 +1427,22 @@
       document.getElementById('restartOverlay').classList.remove('show');
 
       livePanel.classList.remove('show');
-      assignedList.innerHTML = '';
+      assignedList.textContent = '';
       targetInfo.style.display = 'none';
       headingText.textContent = '-- °';
       headingSub.textContent  = '请转动手机查看方向';
+      headingText.style.display = '';
+      headingSub.style.display = '';
+      sensorTip.style.display = 'none';
+
+      // 隐藏手动旋转滑块
+      var manualWrap = document.getElementById('manualRotateWrap');
+      if (manualWrap) manualWrap.classList.remove('show');
+
+      // 重置弹窗状态
+      resultBannerActive = false;
+      resultNeedles = [];
+      resultCompassFixed.querySelectorAll('.result-player-needle').forEach(function(el){ el.remove(); });
     }
 
     // ========== 键盘 ==========
