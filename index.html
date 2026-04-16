@@ -890,7 +890,7 @@
       sensorCheckTimer = setTimeout(function() {
         if (!sensorActive && deviceHeading === null) {
           // 如果面板已显示，显示手动旋转滑块
-          if (livePanel.classList.contains('show')) {
+          if (livePanel && livePanel.classList.contains('show')) {
             showManualRotate();
           }
         }
@@ -972,7 +972,7 @@
         DeviceOrientationEvent.requestPermission().then(function(s) {
           if (s === 'granted') {
             permissionGranted = true;
-            sensorTip.style.display = 'none';
+            if (sensorTip) sensorTip.style.display = 'none';
             registerSensorListeners();
           }
         }).catch(function(err){
@@ -1098,7 +1098,9 @@
       if (diff > 180) diff -= 360;
       if (diff < -180) diff += 360;
       lastNeedleAngle += diff;
-      needleTarget.style.transform = 'translateX(-50%) rotate(' + lastNeedleAngle + 'deg)';
+      if (needleTarget) {
+        needleTarget.style.transform = 'translateX(-50%) rotate(' + lastNeedleAngle + 'deg)';
+      }
     }
 
     // ========== 更新面板 ==========
@@ -1111,14 +1113,14 @@
         var row = document.createElement('div');
         if (!row) return;
         row.className = 'assigned-row' + (isLatest ? ' latest' : '');
-        
+
         var playerSpan = document.createElement('span');
         if (playerSpan) {
           playerSpan.className = 'ar-player';
           playerSpan.textContent = r.player;
           row.appendChild(playerSpan);
         }
-        
+
         var dirSpan = document.createElement('span');
         if (dirSpan) {
           dirSpan.className = 'ar-dir';
@@ -1126,7 +1128,7 @@
           dirSpan.textContent = r.direction.name;
           row.appendChild(dirSpan);
         }
-        
+
         if (isLatest) {
           var badge = document.createElement('span');
           if (badge) {
@@ -1135,7 +1137,7 @@
             row.appendChild(badge);
           }
         }
-        
+
         if (assignedList) assignedList.appendChild(row);
       });
 
@@ -1180,8 +1182,9 @@
           // 传感器未激活，显示手动旋转滑块
           showManualRotate();
           // 箭头静止指向对应方位（从正北顺时针）
-          if (needleTarget) {
-            needleTarget.style.transform = 'translateX(-50%) rotate(' + latest.direction.degree + 'deg)';
+          var needleTargetEl = document.getElementById('needleTarget');
+          if (needleTargetEl) {
+            needleTargetEl.style.transform = 'translateX(-50%) rotate(' + latest.direction.degree + 'deg)';
           }
         }
       }
@@ -1192,6 +1195,7 @@
       var count = window.innerWidth < 480 ? 12 : 18;
       for (var i = 0; i < count; i++) {
         var el = document.createElement('div');
+        if (!el) continue;
         el.className = 'particle';
         var size = 4 + randInt(8);
         var angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.6;
@@ -1203,7 +1207,7 @@
           '--tx:' + (Math.cos(angle) * dist) + 'px;' +
           '--ty:' + (Math.sin(angle) * dist) + 'px;';
         document.body.appendChild(el);
-        setTimeout(function(){ el.remove(); }, 1000);
+        setTimeout(function(element){ if (element && typeof element.remove === 'function') element.remove(); }, 1000, el);
       }
     }
 
@@ -1215,8 +1219,9 @@
       card.classList.add('assigned', 'highlight');
       setTimeout(function(){ card.classList.remove('highlight'); }, 600);
       var ex = card.querySelector('.assigned-player');
-      if (ex) ex.remove();
+      if (ex && typeof ex.remove === 'function') ex.remove();
       var sp = document.createElement('span');
+      if (!sp) return;
       sp.className = 'assigned-player';
       sp.textContent = playerName;
       card.appendChild(sp);
@@ -1230,6 +1235,7 @@
     }
 
     function updateUndoBtn() {
+      if (!undoBtn) return;
       if (results.length > 0 && !isRolling && currentRound < 4)
         undoBtn.classList.add('visible');
       else
@@ -1239,17 +1245,17 @@
     // ========== 重置确认 ==========
     function confirmReset() {
       if (results.length === 0 && currentRound === 0) return;
-      resetConfirm.classList.remove('hidden');
+      if (resetConfirm) resetConfirm.classList.remove('hidden');
     }
-    function cancelReset() { resetConfirm.classList.add('hidden'); }
-    function doReset()     { resetConfirm.classList.add('hidden'); resetGame(); }
+    function cancelReset() { if (resetConfirm) resetConfirm.classList.add('hidden'); }
+    function doReset()     { if (resetConfirm) resetConfirm.classList.add('hidden'); resetGame(); }
 
     // ========== 主逻辑 ==========
     async function rollDice() {
       if (isRolling || currentRound >= 4) return;
       isRolling = true;
-      rollBtn.classList.add('disabled');
-      undoBtn.classList.remove('visible');
+      if (rollBtn) rollBtn.classList.add('disabled');
+      if (undoBtn) undoBtn.classList.remove('visible');
 
       try {
         tryReqPerm();
@@ -1259,9 +1265,9 @@
         var player = PLAYERS[currentRound];
 
         // 小指南针旋转动画
-        miniCompass.classList.add('spinning');
+        if (miniCompass) miniCompass.classList.add('spinning');
         await sleep(900);
-        miniCompass.classList.remove('spinning');
+        if (miniCompass) miniCompass.classList.remove('spinning');
 
         // 更新卡片、记录结果
         updateCard(dir, player);
@@ -1281,7 +1287,7 @@
 
         // 更新并显示实时面板
         updateLivePanel();
-        if (!livePanel.classList.contains('show')) {
+        if (livePanel && !livePanel.classList.contains('show')) {
           livePanel.classList.add('show');
         }
 
@@ -1296,15 +1302,15 @@
         await sleep(800);
         showResult();
       } else {
-        var playerNameEl = document.getElementById('playerName');
-        if (playerNameEl) playerNameEl.textContent = PLAYERS[currentRound];
+        var nextPlayerEl = document.getElementById('playerName');
+        if (nextPlayerEl) nextPlayerEl.textContent = PLAYERS[currentRound];
         if (rollBtn) rollBtn.classList.remove('disabled');
         updateUndoBtn();
       }
       } catch (err) {
         // 恢复状态
         isRolling = false;
-        rollBtn.classList.remove('disabled');
+        if (rollBtn) rollBtn.classList.remove('disabled');
         updateUndoBtn();
         // 重新抛出以便上层处理
         throw err;
@@ -1324,7 +1330,7 @@
       if (card) {
         card.classList.remove('assigned', 'highlight');
         var p = card.querySelector('.assigned-player');
-        if (p) p.remove();
+        if (p && typeof p.remove === 'function') p.remove();
       }
       updateProgress(currentRound);
       var playerNameEl = document.getElementById('playerName');
@@ -1351,20 +1357,23 @@
       resultNeedles = [];
       // 先清理旧的
       if (resultCompassFixed) {
-        resultCompassFixed.querySelectorAll('.result-player-needle').forEach(function(el){ el.remove(); });
+        resultCompassFixed.querySelectorAll('.result-player-needle').forEach(function(el){ if (el && typeof el.remove === 'function') el.remove(); });
       }
 
       results.forEach(function(r) {
         if (!r || !r.direction) return;
         var wrap = document.createElement('div');
+        if (!wrap) return;
         wrap.className = 'result-player-needle';
 
         var arrow = document.createElement('div');
+        if (!arrow) return;
         arrow.className = 'result-player-needle-arrow';
         arrow.style.borderBottomColor = r.direction.color;
         arrow.style.filter = 'drop-shadow(0 0 6px ' + r.direction.color + ')';
 
         var label = document.createElement('div');
+        if (!label) return;
         label.className = 'result-player-needle-label';
         label.textContent = r.player;
         label.style.color = r.direction.color;
@@ -1418,23 +1427,30 @@
         results.forEach(function(r) {
           if (!r || !r.direction) return;
           var li = document.createElement('li');
-          
+          if (!li) return;
+
           var playerSpan = document.createElement('span');
-          playerSpan.className = 'result-player';
-          playerSpan.textContent = r.player;
-          li.appendChild(playerSpan);
-          
+          if (playerSpan) {
+            playerSpan.className = 'result-player';
+            playerSpan.textContent = r.player;
+            li.appendChild(playerSpan);
+          }
+
           var arrowSpan = document.createElement('span');
-          arrowSpan.className = 'result-arrow';
-          arrowSpan.textContent = '→';
-          li.appendChild(arrowSpan);
-          
+          if (arrowSpan) {
+            arrowSpan.className = 'result-arrow';
+            arrowSpan.textContent = '→';
+            li.appendChild(arrowSpan);
+          }
+
           var dirSpan = document.createElement('span');
-          dirSpan.className = 'result-dir';
-          dirSpan.style.color = r.direction.color;
-          dirSpan.textContent = r.direction.name;
-          li.appendChild(dirSpan);
-          
+          if (dirSpan) {
+            dirSpan.className = 'result-dir';
+            dirSpan.style.color = r.direction.color;
+            dirSpan.textContent = r.direction.name;
+            li.appendChild(dirSpan);
+          }
+
           list.appendChild(li);
         });
       }
@@ -1450,7 +1466,7 @@
       resultNeedles = [];
       // 清理弹窗内指针
       if (resultCompassFixed) {
-        resultCompassFixed.querySelectorAll('.result-player-needle').forEach(function(el){ el.remove(); });
+        resultCompassFixed.querySelectorAll('.result-player-needle').forEach(function(el){ if (el && typeof el.remove === 'function') el.remove(); });
       }
       // 同时隐藏实时面板
       if (livePanel) livePanel.classList.remove('show');
@@ -1490,7 +1506,7 @@
         if (card) {
           card.classList.remove('assigned','highlight');
           var p = card.querySelector('.assigned-player');
-          if (p) p.remove();
+          if (p && typeof p.remove === 'function') p.remove();
         }
       });
 
@@ -1526,7 +1542,7 @@
       resultBannerActive = false;
       resultNeedles = [];
       if (resultCompassFixed) {
-        resultCompassFixed.querySelectorAll('.result-player-needle').forEach(function(el){ el.remove(); });
+        resultCompassFixed.querySelectorAll('.result-player-needle').forEach(function(el){ if (el && typeof el.remove === 'function') el.remove(); });
       }
     }
 
