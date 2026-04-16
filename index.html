@@ -1183,7 +1183,9 @@
 
     // ========== 更新卡片 ==========
     function updateCard(dir, playerName) {
+      if (!dir || !dir.id) return;
       var card = document.getElementById('card-' + dir.id);
+      if (!card) return;
       card.classList.add('assigned', 'highlight');
       setTimeout(function(){ card.classList.remove('highlight'); }, 600);
       var ex = card.querySelector('.assigned-player');
@@ -1195,8 +1197,10 @@
     }
 
     function updateProgress(n) {
-      for (var i = 0; i < 4; i++)
-        document.getElementById('dot' + i).classList.toggle('done', i < n);
+      for (var i = 0; i < 4; i++) {
+        var dot = document.getElementById('dot' + i);
+        if (dot) dot.classList.toggle('done', i < n);
+      }
     }
 
     function updateUndoBtn() {
@@ -1238,10 +1242,12 @@
         results.push({ player: player, direction: dir });
 
         // 粒子
-        var cardEl = document.getElementById('card-' + dir.id);
-        if (cardEl) {
-          var rect = cardEl.getBoundingClientRect();
-          spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, dir.color);
+        if (dir && dir.id) {
+          var cardEl = document.getElementById('card-' + dir.id);
+          if (cardEl) {
+            var rect = cardEl.getBoundingClientRect();
+            spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, dir.color);
+          }
         }
 
         currentRound++;
@@ -1253,18 +1259,22 @@
           livePanel.classList.add('show');
         }
 
-        if (currentRound >= 4) {
-          document.getElementById('playerLabel').textContent = '全部完成！';
-          document.getElementById('playerName').textContent  = '';
-          document.getElementById('rollBtnText').textContent = '';
-          rollBtn.classList.add('disabled');
-          await sleep(800);
-          showResult();
-        } else {
-          document.getElementById('playerName').textContent = PLAYERS[currentRound];
-          rollBtn.classList.remove('disabled');
-          updateUndoBtn();
-        }
+      if (currentRound >= 4) {
+        var playerLabel = document.getElementById('playerLabel');
+        var playerNameEl = document.getElementById('playerName');
+        var rollBtnText = document.getElementById('rollBtnText');
+        if (playerLabel) playerLabel.textContent = '全部完成！';
+        if (playerNameEl) playerNameEl.textContent = '';
+        if (rollBtnText) rollBtnText.textContent = '';
+        if (rollBtn) rollBtn.classList.add('disabled');
+        await sleep(800);
+        showResult();
+      } else {
+        var playerNameEl = document.getElementById('playerName');
+        if (playerNameEl) playerNameEl.textContent = PLAYERS[currentRound];
+        if (rollBtn) rollBtn.classList.remove('disabled');
+        updateUndoBtn();
+      }
       } catch (err) {
         // 恢复状态
         isRolling = false;
@@ -1281,27 +1291,31 @@
     function undoLast() {
       if (results.length === 0 || isRolling || currentRound >= 4) return;
       var last = results.pop();
+      if (!last || !last.direction) return;
       currentRound--;
       remaining.push(last.direction);
       var card = document.getElementById('card-' + last.direction.id);
-      card.classList.remove('assigned', 'highlight');
-      var p = card.querySelector('.assigned-player');
-      if (p) p.remove();
+      if (card) {
+        card.classList.remove('assigned', 'highlight');
+        var p = card.querySelector('.assigned-player');
+        if (p) p.remove();
+      }
       updateProgress(currentRound);
-      document.getElementById('playerName').textContent = PLAYERS[currentRound];
+      var playerNameEl = document.getElementById('playerName');
+      if (playerNameEl) playerNameEl.textContent = PLAYERS[currentRound];
       updateUndoBtn();
 
       if (results.length > 0) {
         updateLivePanel();
       } else {
-        livePanel.classList.remove('show');
+        if (livePanel) livePanel.classList.remove('show');
         currentTargetDeg = null;
-        targetInfo.style.display = 'none';
+        if (targetInfo) targetInfo.style.display = 'none';
         // 重置指南针到初始状态
-        compassDial.style.transform = 'rotate(0deg)';
-        needleTarget.style.transform = 'translateX(-50%) rotate(0deg)';
-        headingText.textContent = '-- °';
-        headingSub.textContent = '请转动手机查看方向';
+        if (compassDial) compassDial.style.transform = 'rotate(0deg)';
+        if (needleTarget) needleTarget.style.transform = 'translateX(-50%) rotate(0deg)';
+        if (headingText) headingText.textContent = '-- °';
+        if (headingSub) headingSub.textContent = '请转动手机查看方向';
       }
     }
 
@@ -1310,9 +1324,12 @@
       // 生成4根玩家指针
       resultNeedles = [];
       // 先清理旧的
-      resultCompassFixed.querySelectorAll('.result-player-needle').forEach(function(el){ el.remove(); });
+      if (resultCompassFixed) {
+        resultCompassFixed.querySelectorAll('.result-player-needle').forEach(function(el){ el.remove(); });
+      }
 
       results.forEach(function(r) {
+        if (!r || !r.direction) return;
         var wrap = document.createElement('div');
         wrap.className = 'result-player-needle';
 
@@ -1330,11 +1347,13 @@
         wrap.appendChild(label);
 
         // 插入到中心点前面
-        var centerDot = resultCompassFixed.querySelector('.result-needle-center');
-        if (centerDot) {
-          resultCompassFixed.insertBefore(wrap, centerDot);
-        } else {
-          resultCompassFixed.appendChild(wrap);
+        if (resultCompassFixed) {
+          var centerDot = resultCompassFixed.querySelector('.result-needle-center');
+          if (centerDot) {
+            resultCompassFixed.insertBefore(wrap, centerDot);
+          } else {
+            resultCompassFixed.appendChild(wrap);
+          }
         }
 
         // 计算初始角度
@@ -1354,63 +1373,72 @@
       // 设置初始朝向
       if (deviceHeading !== null) {
         var sector = Math.round(deviceHeading / 22.5) % 16;
-        resultHeadingText.textContent = Math.round(deviceHeading) + '°';
-        resultHeadingSub.textContent  = '当前朝向：' + DIR_NAMES_16[sector];
-        resultCompassDial.style.transform = 'rotate(' + (-deviceHeading) + 'deg)';
+        if (resultHeadingText) resultHeadingText.textContent = Math.round(deviceHeading) + '°';
+        if (resultHeadingSub) resultHeadingSub.textContent = '当前朝向：' + DIR_NAMES_16[sector];
+        if (resultCompassDial) resultCompassDial.style.transform = 'rotate(' + (-deviceHeading) + 'deg)';
       } else {
         // 检测是否为桌面端（无传感器）
         var isDesktop = !('ontouchstart' in window) || window.matchMedia('(pointer: fine)').matches;
-        resultHeadingText.textContent = isDesktop ? '桌面端' : '-- °';
-        resultHeadingSub.textContent  = isDesktop ? '请在手机上使用以查看实时方位' : '转动手机查看方向';
+        if (resultHeadingText) resultHeadingText.textContent = isDesktop ? '桌面端' : '-- °';
+        if (resultHeadingSub) resultHeadingSub.textContent = isDesktop ? '请在手机上使用以查看实时方位' : '转动手机查看方向';
       }
 
       resultBannerActive = true;
 
       // 生成列表
       var list = document.getElementById('resultList');
-      list.textContent = '';
-      results.forEach(function(r) {
-        var li = document.createElement('li');
-        
-        var playerSpan = document.createElement('span');
-        playerSpan.className = 'result-player';
-        playerSpan.textContent = r.player;
-        li.appendChild(playerSpan);
-        
-        var arrowSpan = document.createElement('span');
-        arrowSpan.className = 'result-arrow';
-        arrowSpan.textContent = '→';
-        li.appendChild(arrowSpan);
-        
-        var dirSpan = document.createElement('span');
-        dirSpan.className = 'result-dir';
-        dirSpan.style.color = r.direction.color;
-        dirSpan.textContent = r.direction.name;
-        li.appendChild(dirSpan);
-        
-        list.appendChild(li);
-      });
-      document.getElementById('completeBanner').classList.add('show');
+      if (list) {
+        list.textContent = '';
+        results.forEach(function(r) {
+          if (!r || !r.direction) return;
+          var li = document.createElement('li');
+          
+          var playerSpan = document.createElement('span');
+          playerSpan.className = 'result-player';
+          playerSpan.textContent = r.player;
+          li.appendChild(playerSpan);
+          
+          var arrowSpan = document.createElement('span');
+          arrowSpan.className = 'result-arrow';
+          arrowSpan.textContent = '→';
+          li.appendChild(arrowSpan);
+          
+          var dirSpan = document.createElement('span');
+          dirSpan.className = 'result-dir';
+          dirSpan.style.color = r.direction.color;
+          dirSpan.textContent = r.direction.name;
+          li.appendChild(dirSpan);
+          
+          list.appendChild(li);
+        });
+      }
+      var completeBanner = document.getElementById('completeBanner');
+      if (completeBanner) completeBanner.classList.add('show');
     }
 
     // 关闭完成弹窗 → 显示重新开始弹窗
     function closeResult() {
-      document.getElementById('completeBanner').classList.remove('show');
+      var completeBanner = document.getElementById('completeBanner');
+      if (completeBanner) completeBanner.classList.remove('show');
       resultBannerActive = false;
       resultNeedles = [];
       // 清理弹窗内指针
-      resultCompassFixed.querySelectorAll('.result-player-needle').forEach(function(el){ el.remove(); });
+      if (resultCompassFixed) {
+        resultCompassFixed.querySelectorAll('.result-player-needle').forEach(function(el){ el.remove(); });
+      }
       // 同时隐藏实时面板
-      livePanel.classList.remove('show');
+      if (livePanel) livePanel.classList.remove('show');
       // 延迟显示重新开始弹窗
       setTimeout(function(){
-        document.getElementById('restartOverlay').classList.add('show');
+        var restartOverlay = document.getElementById('restartOverlay');
+        if (restartOverlay) restartOverlay.classList.add('show');
       }, 300);
     }
 
     // 重新开始
     function doRestart() {
-      document.getElementById('restartOverlay').classList.remove('show');
+      var restartOverlay = document.getElementById('restartOverlay');
+      if (restartOverlay) restartOverlay.classList.remove('show');
       resetGame();
     }
 
@@ -1433,29 +1461,36 @@
 
       DIRECTIONS.forEach(function(d) {
         var card = document.getElementById('card-' + d.id);
-        card.classList.remove('assigned','highlight');
-        var p = card.querySelector('.assigned-player');
-        if (p) p.remove();
+        if (card) {
+          card.classList.remove('assigned','highlight');
+          var p = card.querySelector('.assigned-player');
+          if (p) p.remove();
+        }
       });
 
       updateProgress(0);
       updateUndoBtn();
-      miniCompass.classList.remove('spinning');
-      rollBtn.classList.remove('disabled');
-      document.getElementById('playerLabel').textContent = '轮到';
-      document.getElementById('playerName').textContent  = '玩家一';
-      document.getElementById('rollBtnText').textContent = '点击定方位';
-      document.getElementById('completeBanner').classList.remove('show');
-      document.getElementById('restartOverlay').classList.remove('show');
+      if (miniCompass) miniCompass.classList.remove('spinning');
+      if (rollBtn) rollBtn.classList.remove('disabled');
+      var playerLabel = document.getElementById('playerLabel');
+      var playerNameEl = document.getElementById('playerName');
+      var rollBtnText = document.getElementById('rollBtnText');
+      var completeBanner = document.getElementById('completeBanner');
+      var restartOverlay = document.getElementById('restartOverlay');
+      if (playerLabel) playerLabel.textContent = '轮到';
+      if (playerNameEl) playerNameEl.textContent = '玩家一';
+      if (rollBtnText) rollBtnText.textContent = '点击定方位';
+      if (completeBanner) completeBanner.classList.remove('show');
+      if (restartOverlay) restartOverlay.classList.remove('show');
 
-      livePanel.classList.remove('show');
-      assignedList.textContent = '';
-      targetInfo.style.display = 'none';
-      headingText.textContent = '-- °';
-      headingSub.textContent  = '请转动手机查看方向';
-      headingText.style.display = '';
-      headingSub.style.display = '';
-      sensorTip.style.display = 'none';
+      if (livePanel) livePanel.classList.remove('show');
+      if (assignedList) assignedList.textContent = '';
+      if (targetInfo) targetInfo.style.display = 'none';
+      if (headingText) headingText.textContent = '-- °';
+      if (headingSub) headingSub.textContent = '请转动手机查看方向';
+      if (headingText) headingText.style.display = '';
+      if (headingSub) headingSub.style.display = '';
+      if (sensorTip) sensorTip.style.display = 'none';
 
       // 隐藏手动旋转滑块
       var manualWrap = document.getElementById('manualRotateWrap');
@@ -1464,7 +1499,9 @@
       // 重置弹窗状态
       resultBannerActive = false;
       resultNeedles = [];
-      resultCompassFixed.querySelectorAll('.result-player-needle').forEach(function(el){ el.remove(); });
+      if (resultCompassFixed) {
+        resultCompassFixed.querySelectorAll('.result-player-needle').forEach(function(el){ el.remove(); });
+      }
     }
 
     // ========== 键盘 ==========
