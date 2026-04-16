@@ -837,28 +837,32 @@
         var x2 = cx + cos * inner;
         var y2 = cy + sin * inner;
         var line = document.createElementNS(svgNS, 'line');
-        line.setAttribute('x1', x1.toFixed(2));
-        line.setAttribute('y1', y1.toFixed(2));
-        line.setAttribute('x2', x2.toFixed(2));
-        line.setAttribute('y2', y2.toFixed(2));
-        line.setAttribute('stroke', isQ ? 'rgba(255,215,0,0.55)' : isM ? 'rgba(255,215,0,0.3)' : 'rgba(255,215,0,0.14)');
-        line.setAttribute('stroke-width', isQ ? '2.5' : isM ? '1.8' : '1');
-        g.appendChild(line);
+        if (line) {
+          line.setAttribute('x1', x1.toFixed(2));
+          line.setAttribute('y1', y1.toFixed(2));
+          line.setAttribute('x2', x2.toFixed(2));
+          line.setAttribute('y2', y2.toFixed(2));
+          line.setAttribute('stroke', isQ ? 'rgba(255,215,0,0.55)' : isM ? 'rgba(255,215,0,0.3)' : 'rgba(255,215,0,0.14)');
+          line.setAttribute('stroke-width', isQ ? '2.5' : isM ? '1.8' : '1');
+          g.appendChild(line);
+        }
 
         if (showNumbers && isM && !isQ) {
           var lr = r - 26;
           var lx = cx + cos * lr;
           var ly = cy + sin * lr;
           var t = document.createElementNS(svgNS, 'text');
-          t.setAttribute('x', lx.toFixed(2));
-          t.setAttribute('y', ly.toFixed(2));
-          t.setAttribute('text-anchor', 'middle');
-          t.setAttribute('dominant-baseline', 'middle');
-          t.setAttribute('fill', 'rgba(255,215,0,0.3)');
-          t.setAttribute('font-size', '9');
-          t.setAttribute('font-family', 'PingFang SC,Microsoft YaHei,sans-serif');
-          t.textContent = String(i);
-          g.appendChild(t);
+          if (t) {
+            t.setAttribute('x', lx.toFixed(2));
+            t.setAttribute('y', ly.toFixed(2));
+            t.setAttribute('text-anchor', 'middle');
+            t.setAttribute('dominant-baseline', 'middle');
+            t.setAttribute('fill', 'rgba(255,215,0,0.3)');
+            t.setAttribute('font-size', '9');
+            t.setAttribute('font-family', 'PingFang SC,Microsoft YaHei,sans-serif');
+            t.textContent = String(i);
+            g.appendChild(t);
+          }
         }
       }
     }
@@ -986,11 +990,12 @@
     }
 
     function requestPerm() {
-      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      if (typeof DeviceOrientationEvent !== 'undefined' &&
+          typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission().then(function(s) {
           if (s === 'granted') {
             permissionGranted = true;
-            sensorTip.style.display = 'none';
+            if (sensorTip) sensorTip.style.display = 'none';
             registerSensorListeners();
           }
         }).catch(function(err){
@@ -1004,9 +1009,9 @@
     }
 
     function showSensorTip() {
-      sensorTip.style.display = 'block';
-      headingText.style.display = 'none';
-      headingSub.style.display = 'none';
+      if (sensorTip) sensorTip.style.display = 'block';
+      if (headingText) headingText.style.display = 'none';
+      if (headingSub) headingSub.style.display = 'none';
     }
 
     var DIR_NAMES_16 = ['北','北北东','东北','东北东','东','东南东','东南','南南东','南','南南西','西南','西南西','西','西北西','西北','北北西'];
@@ -1033,10 +1038,10 @@
       h = (h + 360) % 360;
       deviceHeading = h;
       sensorActive = true;
-      sensorTip.style.display = 'none';
-      if (headingText.style.display === 'none') {
+      if (sensorTip) sensorTip.style.display = 'none';
+      if (headingText && headingText.style.display === 'none') {
         headingText.style.display = '';
-        headingSub.style.display = '';
+        if (headingSub) headingSub.style.display = '';
       }
       updateCompassUI(h);
       // 同时更新弹窗指南针
@@ -1099,53 +1104,72 @@
     // ========== 更新面板 ==========
     function updateLivePanel() {
       // 更新分配列表
-      assignedList.textContent = '';
+      if (assignedList) assignedList.textContent = '';
       results.forEach(function(r, i) {
+        if (!r || !r.direction) return;
         var isLatest = (i === results.length - 1);
         var row = document.createElement('div');
+        if (!row) return;
         row.className = 'assigned-row' + (isLatest ? ' latest' : '');
         
         var playerSpan = document.createElement('span');
-        playerSpan.className = 'ar-player';
-        playerSpan.textContent = r.player;
-        row.appendChild(playerSpan);
+        if (playerSpan) {
+          playerSpan.className = 'ar-player';
+          playerSpan.textContent = r.player;
+          row.appendChild(playerSpan);
+        }
         
         var dirSpan = document.createElement('span');
-        dirSpan.className = 'ar-dir';
-        dirSpan.style.color = r.direction.color;
-        dirSpan.textContent = r.direction.name;
-        row.appendChild(dirSpan);
+        if (dirSpan) {
+          dirSpan.className = 'ar-dir';
+          dirSpan.style.color = r.direction.color;
+          dirSpan.textContent = r.direction.name;
+          row.appendChild(dirSpan);
+        }
         
         if (isLatest) {
           var badge = document.createElement('span');
-          badge.className = 'ar-badge';
-          badge.textContent = '当前';
-          row.appendChild(badge);
+          if (badge) {
+            badge.className = 'ar-badge';
+            badge.textContent = '当前';
+            row.appendChild(badge);
+          }
         }
         
-        assignedList.appendChild(row);
+        if (assignedList) assignedList.appendChild(row);
       });
 
       // 设置目标指针颜色和名称
       if (results.length > 0) {
         var latest = results[results.length - 1];
+        if (!latest || !latest.direction) return;
         currentTargetDeg = latest.direction.degree;
-        needleTargetArrow.style.borderBottomColor = latest.direction.color;
-        needleTargetArrow.style.filter = 'drop-shadow(0 0 8px ' + latest.direction.color + ')';
-        targetInfo.style.display = 'block';
-        targetInfoName.textContent = latest.direction.name;
-        targetInfoName.style.color = latest.direction.color;
+        if (needleTargetArrow) {
+          needleTargetArrow.style.borderBottomColor = latest.direction.color;
+          needleTargetArrow.style.filter = 'drop-shadow(0 0 8px ' + latest.direction.color + ')';
+        }
+        if (targetInfo) targetInfo.style.display = 'block';
+        if (targetInfoName) {
+          targetInfoName.textContent = latest.direction.name;
+          targetInfoName.style.color = latest.direction.color;
+        }
 
         // 更新面板标题
-        panelCurPlayer.textContent = '';
-        var strong1 = document.createElement('strong');
-        strong1.textContent = latest.player;
-        panelCurPlayer.appendChild(strong1);
-        panelCurPlayer.appendChild(document.createTextNode(' 的方位：'));
-        var strong2 = document.createElement('strong');
-        strong2.style.color = latest.direction.color;
-        strong2.textContent = latest.direction.name;
-        panelCurPlayer.appendChild(strong2);
+        if (panelCurPlayer) {
+          panelCurPlayer.textContent = '';
+          var strong1 = document.createElement('strong');
+          if (strong1) {
+            strong1.textContent = latest.player;
+            panelCurPlayer.appendChild(strong1);
+            panelCurPlayer.appendChild(document.createTextNode(' 的方位：'));
+          }
+          var strong2 = document.createElement('strong');
+          if (strong2) {
+            strong2.style.color = latest.direction.color;
+            strong2.textContent = latest.direction.name;
+            panelCurPlayer.appendChild(strong2);
+          }
+        }
 
         // 立即渲染指南针
         if (sensorActive && deviceHeading !== null) {
@@ -1156,7 +1180,9 @@
           // 传感器未激活，显示手动旋转滑块
           showManualRotate();
           // 箭头静止指向对应方位（从正北顺时针）
-          needleTarget.style.transform = 'translateX(-50%) rotate(' + latest.direction.degree + 'deg)';
+          if (needleTarget) {
+            needleTarget.style.transform = 'translateX(-50%) rotate(' + latest.direction.degree + 'deg)';
+          }
         }
       }
     }
