@@ -636,7 +636,7 @@
       ⚠️ 无法获取方向传感器<br>
       <span style="font-size:0.7rem;color:rgba(255,255,255,0.3)">
         iOS 需在 <strong style="color:#ffd700">设置 → Safari → 运动与方向访问</strong> 开启<br>
-        或点击 <span class="link" onclick="requestPerm()">请求权限</span>
+        或点击 <span class="link" onclick="requestPerm()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();requestPerm();}">请求权限</span>
       </span>
     </div>
 
