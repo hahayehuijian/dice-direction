@@ -971,7 +971,12 @@
             sensorTip.style.display = 'none';
             registerSensorListeners();
           }
-        }).catch(function(){});
+        }).catch(function(err){
+          // 权限请求失败，静默处理
+          if (err && typeof console !== 'undefined' && console.warn) {
+            console.warn('Device orientation permission request failed');
+          }
+        });
       } else {
         // 安卓设备：确保传感器已注册（可能在 initSensor 中已经注册过了）
         if (!sensorListenersRegistered) {
@@ -988,7 +993,13 @@
             sensorTip.style.display = 'none';
             registerSensorListeners();
           }
-        }).catch(function(){ showSensorTip(); });
+        }).catch(function(err){
+          // 权限请求失败，显示传感器提示
+          showSensorTip();
+          if (err && typeof console !== 'undefined' && console.warn) {
+            console.warn('Device orientation permission failed:', err);
+          }
+        });
       }
     }
 
@@ -1210,46 +1221,57 @@
       rollBtn.classList.add('disabled');
       undoBtn.classList.remove('visible');
 
-      tryReqPerm();
+      try {
+        tryReqPerm();
 
-      var idx = randInt(remaining.length);
-      var dir = remaining.splice(idx, 1)[0];
-      var player = PLAYERS[currentRound];
+        var idx = randInt(remaining.length);
+        var dir = remaining.splice(idx, 1)[0];
+        var player = PLAYERS[currentRound];
 
-      // 小指南针旋转动画
-      miniCompass.classList.add('spinning');
-      await sleep(900);
-      miniCompass.classList.remove('spinning');
+        // 小指南针旋转动画
+        miniCompass.classList.add('spinning');
+        await sleep(900);
+        miniCompass.classList.remove('spinning');
 
-      // 更新卡片、记录结果
-      updateCard(dir, player);
-      results.push({ player: player, direction: dir });
+        // 更新卡片、记录结果
+        updateCard(dir, player);
+        results.push({ player: player, direction: dir });
 
-      // 粒子
-      var cardEl = document.getElementById('card-' + dir.id);
-      var rect = cardEl.getBoundingClientRect();
-      spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, dir.color);
+        // 粒子
+        var cardEl = document.getElementById('card-' + dir.id);
+        if (cardEl) {
+          var rect = cardEl.getBoundingClientRect();
+          spawnParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, dir.color);
+        }
 
-      currentRound++;
-      updateProgress(currentRound);
+        currentRound++;
+        updateProgress(currentRound);
 
-      // 更新并显示实时面板
-      updateLivePanel();
-      if (!livePanel.classList.contains('show')) {
-        livePanel.classList.add('show');
-      }
+        // 更新并显示实时面板
+        updateLivePanel();
+        if (!livePanel.classList.contains('show')) {
+          livePanel.classList.add('show');
+        }
 
-      if (currentRound >= 4) {
-        document.getElementById('playerLabel').textContent = '全部完成！';
-        document.getElementById('playerName').textContent  = '';
-        document.getElementById('rollBtnText').textContent = '';
-        rollBtn.classList.add('disabled');
-        await sleep(800);
-        showResult();
-      } else {
-        document.getElementById('playerName').textContent = PLAYERS[currentRound];
+        if (currentRound >= 4) {
+          document.getElementById('playerLabel').textContent = '全部完成！';
+          document.getElementById('playerName').textContent  = '';
+          document.getElementById('rollBtnText').textContent = '';
+          rollBtn.classList.add('disabled');
+          await sleep(800);
+          showResult();
+        } else {
+          document.getElementById('playerName').textContent = PLAYERS[currentRound];
+          rollBtn.classList.remove('disabled');
+          updateUndoBtn();
+        }
+      } catch (err) {
+        // 恢复状态
+        isRolling = false;
         rollBtn.classList.remove('disabled');
         updateUndoBtn();
+        // 重新抛出以便上层处理
+        throw err;
       }
 
       isRolling = false;
